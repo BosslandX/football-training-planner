@@ -34,9 +34,9 @@ const GOAL_TOOLS: ToolDef[] = [
 ];
 
 const DRAW_TOOLS: { mode: ToolMode; label: string }[] = [
-  { mode: 'arrow', label: '→ Pfeil' },
-  { mode: 'dashed', label: '┅ Gestrichelt' },
-  { mode: 'curved', label: '↝ Kurve' },
+  { mode: 'arrow', label: '→ Schuss/Pass' },
+  { mode: 'dashed', label: '┅ Laufweg' },
+  { mode: 'curved', label: '↝ Dribbling' },
   { mode: 'zone', label: '▭ Zone' },
   { mode: 'text', label: 'T Text' },
 ];

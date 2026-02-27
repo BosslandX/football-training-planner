@@ -93,6 +93,23 @@ export const DRAW_COLORS = [
   '#ffffff', '#f1c40f', '#e74c3c', '#3498db', '#2ecc71',
 ];
 
+export interface Exercise {
+  concept: ConceptData;
+  elements: FieldElement[];
+  drawings: Drawing[];
+  fieldType: FieldType;
+}
+
+export interface ExerciseImportData {
+  concept: ConceptData;
+  elements: Omit<FieldElement, 'id'>[];
+  fieldType: string;
+}
+
+export interface ImportResult {
+  exercises: ExerciseImportData[];
+}
+
 export const CATEGORIES = [
   'Aufwärmen', 'Technik', 'Taktik', 'Spielform',
   'Torschuss', 'Kondition', 'Auslaufen',

@@ -1,10 +1,47 @@
+import { useRef } from 'react';
 import { useStore } from '../store/useStore';
 import type { ToolMode, FieldType } from '../types';
 
 const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
 
 export function TopBar() {
-  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo } = useStore();
+  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle } = useStore();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Confirm if current exercise has elements
+    const state = useStore.getState();
+    const hasContent = state.elements.length > 0 || state.exercises.length > 1;
+    if (hasContent && !confirm('Alle aktuellen Übungen werden ersetzt. Fortfahren?')) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch('/api/import/training-plan', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!resp.ok) {
+        const err = await resp.json();
+        alert(`Import fehlgeschlagen: ${err.error || 'Unbekannter Fehler'}`);
+        return;
+      }
+      const data = await resp.json();
+      useStore.getState().importTrainingPlan(data);
+    } catch {
+      alert('Import fehlgeschlagen: Server nicht erreichbar');
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const cycleField = () => {
     const idx = FIELD_TYPES.indexOf(fieldType);
@@ -69,17 +106,22 @@ export function TopBar() {
       <div className="topbar-divider" />
       <div className="topbar-group">
         {modeBtn('select', '🖱️ Auswahl')}
-        {modeBtn('arrow', '→ Pfeil')}
+        {modeBtn('arrow', '→ Schuss/Pass')}
         {modeBtn('dashed', '┅ Laufweg')}
+        {modeBtn('curved', '↝ Dribbling')}
         {modeBtn('zone', '▭ Zone')}
       </div>
       <div className="topbar-divider" />
       <div className="topbar-group">
         <button className="topbar-btn" onClick={cycleField}>🏟️ Spielfeld</button>
         <button className={`topbar-btn ${showGrid ? 'active' : ''}`} onClick={toggleGrid}>⊞ Raster</button>
+        <button className={`topbar-btn ${playerStyle === 'figure' ? 'active' : ''}`} onClick={togglePlayerStyle}>
+          {playerStyle === 'figure' ? '👤 Figuren' : '⚪ Kreise'}
+        </button>
       </div>
       <div className="topbar-spacer" />
       <div className="topbar-group">
+        {/* Import vorübergehend ausgeblendet */}
         <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={toggleConcept}>📋 Konzeption</button>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>

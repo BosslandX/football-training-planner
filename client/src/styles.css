@@ -49,6 +49,33 @@ body {
 .topbar-group { display: flex; gap: 4px; align-items: center; }
 .topbar-spacer { flex: 1; }
 
+/* EXERCISE TABS */
+.exercise-tabs {
+  display: flex;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.exercise-tab {
+  padding: 8px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.exercise-tab:hover { color: var(--text); }
+.exercise-tab.active {
+  color: var(--highlight);
+  border-bottom-color: var(--highlight);
+}
+
 /* MAIN LAYOUT */
 .main { display: flex; flex: 1; overflow: hidden; }
 

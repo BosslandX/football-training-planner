@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { FieldElement, Drawing, ConceptData, ToolMode, FieldType, Keyframe } from '../types';
+import type { FieldElement, Drawing, ConceptData, ToolMode, FieldType, Keyframe, ImportResult, Exercise } from '../types';
 
 interface HistoryEntry {
   elements: FieldElement[];
@@ -21,6 +21,7 @@ interface AppState {
   // Field
   fieldType: FieldType;
   showGrid: boolean;
+  playerStyle: 'circle' | 'figure';
 
   // Animation
   animTime: number;
@@ -31,6 +32,10 @@ interface AppState {
   // Concept
   concept: ConceptData;
   showConcept: boolean;
+
+  // Exercises (multi-exercise support)
+  exercises: Exercise[];
+  currentExerciseIndex: number;
 
   // Undo/Redo
   undoStack: HistoryEntry[];
@@ -49,6 +54,7 @@ interface AppState {
   setMode: (mode: ToolMode) => void;
   setFieldType: (type: FieldType) => void;
   toggleGrid: () => void;
+  togglePlayerStyle: () => void;
   addDrawing: (d: Omit<Drawing, 'id'>) => void;
   removeDrawing: (id: number) => void;
 
@@ -81,6 +87,12 @@ interface AppState {
   // Reset
   resetAll: () => void;
 
+  // Exercises
+  switchExercise: (index: number) => void;
+
+  // Import
+  importTrainingPlan: (data: ImportResult) => void;
+
   // Export helper
   getExportData: () => { elements: FieldElement[]; drawings: Drawing[]; concept: ConceptData; fieldType: FieldType };
 }
@@ -107,12 +119,15 @@ export const useStore = create<AppState>((set, get) => ({
   mode: 'select',
   fieldType: 'full-green',
   showGrid: false,
+  playerStyle: 'circle',
   animTime: 0,
   animDuration: 5,
   animSpeed: 1,
   animPlaying: false,
   concept: { ...defaultConcept },
   showConcept: true,
+  exercises: [],
+  currentExerciseIndex: 0,
   undoStack: [],
   redoStack: [],
 
@@ -164,6 +179,7 @@ export const useStore = create<AppState>((set, get) => ({
   setMode: (mode) => set({ mode }),
   setFieldType: (type) => set({ fieldType: type }),
   toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
+  togglePlayerStyle: () => set(s => ({ playerStyle: s.playerStyle === 'circle' ? 'figure' : 'circle' })),
 
   addDrawing: (d) => {
     const id = get().nextId;
@@ -318,9 +334,76 @@ export const useStore = create<AppState>((set, get) => ({
     }));
   },
 
+  switchExercise: (index) => {
+    const state = get();
+    if (index === state.currentExerciseIndex || index < 0 || index >= state.exercises.length) return;
+
+    // Save current state into exercises array
+    const updatedExercises = [...state.exercises];
+    updatedExercises[state.currentExerciseIndex] = {
+      concept: state.concept,
+      elements: state.elements,
+      drawings: state.drawings,
+      fieldType: state.fieldType,
+    };
+
+    // Load target exercise
+    const target = updatedExercises[index];
+    set({
+      exercises: updatedExercises,
+      currentExerciseIndex: index,
+      elements: target.elements,
+      drawings: target.drawings,
+      concept: target.concept,
+      fieldType: target.fieldType,
+      selectedId: null,
+      animTime: 0,
+      animPlaying: false,
+      undoStack: [],
+      redoStack: [],
+    });
+  },
+
+  importTrainingPlan: (data: ImportResult) => {
+    let nextId = 1;
+
+    const exercises: Exercise[] = data.exercises.map(ex => {
+      const elements: FieldElement[] = ex.elements.map(el => ({
+        ...el,
+        id: nextId++,
+        keyframes: [],
+      } as FieldElement));
+      return {
+        concept: ex.concept,
+        elements,
+        drawings: [],
+        fieldType: (ex.fieldType as FieldType) || 'full-green',
+      };
+    });
+
+    const first = exercises[0];
+    set({
+      exercises,
+      currentExerciseIndex: 0,
+      elements: first.elements,
+      drawings: first.drawings,
+      nextId,
+      selectedId: null,
+      concept: first.concept,
+      fieldType: first.fieldType,
+      showConcept: true,
+      animTime: 0,
+      animPlaying: false,
+      undoStack: [],
+      redoStack: [],
+    });
+  },
+
   resetAll: () => set({
     elements: [],
     drawings: [],
+    exercises: [],
+    currentExerciseIndex: 0,
     selectedId: null,
     animTime: 0,
     animPlaying: false,

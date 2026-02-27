@@ -12,6 +12,7 @@ interface RenderConfig {
   showGrid: boolean;
   selectedId: number | null;
   animPlaying: boolean;
+  playerStyle: 'circle' | 'figure';
 }
 
 export function drawField(ctx: CanvasRenderingContext2D, cfg: RenderConfig) {
@@ -121,6 +122,171 @@ export function drawField(ctx: CanvasRenderingContext2D, cfg: RenderConfig) {
   }
 }
 
+function drawPlayerFigure(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number,
+  el: FieldElement, s: number, selected: boolean
+) {
+  const color = el.color || '#3498db';
+  const isTrainer = el.type === 'trainer';
+  const isGK = el.type === 'goalkeeper';
+  const shirtColor = isTrainer ? '#2c3e50' : color;
+  const shortsColor = isTrainer ? '#1a252f' : '#fff';
+  const headR = 6 * s;
+  const bodyH = 16 * s;
+  const bodyW = 14 * s;
+  const legH = 12 * s;
+  const armL = 10 * s;
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(x, y - bodyH / 2 - headR, headR, 0, Math.PI * 2);
+  ctx.fillStyle = '#f5c6a0';
+  ctx.fill();
+  ctx.strokeStyle = '#c9956b';
+  ctx.lineWidth = 1 * s;
+  ctx.stroke();
+
+  // Shirt (torso)
+  ctx.fillStyle = shirtColor;
+  ctx.beginPath();
+  ctx.moveTo(x - bodyW / 2, y - bodyH / 2 + 2 * s);
+  ctx.lineTo(x + bodyW / 2, y - bodyH / 2 + 2 * s);
+  ctx.lineTo(x + bodyW / 2 - 1 * s, y + bodyH / 4);
+  ctx.lineTo(x - bodyW / 2 + 1 * s, y + bodyH / 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.25)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Shorts
+  ctx.fillStyle = shortsColor;
+  ctx.beginPath();
+  ctx.moveTo(x - bodyW / 2 + 1 * s, y + bodyH / 4);
+  ctx.lineTo(x + bodyW / 2 - 1 * s, y + bodyH / 4);
+  ctx.lineTo(x + bodyW / 2 - 2 * s, y + bodyH / 4 + 8 * s);
+  ctx.lineTo(x + 1 * s, y + bodyH / 4 + 7 * s);
+  ctx.lineTo(x - 1 * s, y + bodyH / 4 + 7 * s);
+  ctx.lineTo(x - bodyW / 2 + 2 * s, y + bodyH / 4 + 8 * s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.15)';
+  ctx.stroke();
+
+  // Legs
+  ctx.strokeStyle = '#f5c6a0';
+  ctx.lineWidth = 3 * s;
+  ctx.lineCap = 'round';
+
+  if (el.type === 'player-run') {
+    // Running pose: legs spread
+    ctx.beginPath();
+    ctx.moveTo(x - 2 * s, y + bodyH / 4 + 6 * s);
+    ctx.lineTo(x - 6 * s, y + bodyH / 4 + 6 * s + legH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + 2 * s, y + bodyH / 4 + 6 * s);
+    ctx.lineTo(x + 6 * s, y + bodyH / 4 + 6 * s + legH);
+    ctx.stroke();
+  } else if (el.type === 'player-pass') {
+    // Kicking pose: one leg forward
+    ctx.beginPath();
+    ctx.moveTo(x - 2 * s, y + bodyH / 4 + 6 * s);
+    ctx.lineTo(x - 3 * s, y + bodyH / 4 + 6 * s + legH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + 2 * s, y + bodyH / 4 + 6 * s);
+    ctx.lineTo(x + 10 * s, y + bodyH / 4 + 2 * s + legH);
+    ctx.stroke();
+  } else {
+    // Standing
+    ctx.beginPath();
+    ctx.moveTo(x - 2 * s, y + bodyH / 4 + 6 * s);
+    ctx.lineTo(x - 3 * s, y + bodyH / 4 + 6 * s + legH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + 2 * s, y + bodyH / 4 + 6 * s);
+    ctx.lineTo(x + 3 * s, y + bodyH / 4 + 6 * s + legH);
+    ctx.stroke();
+  }
+
+  // Arms
+  ctx.strokeStyle = '#f5c6a0';
+  ctx.lineWidth = 2.5 * s;
+
+  if (isGK) {
+    // GK: arms wide
+    ctx.beginPath();
+    ctx.moveTo(x - bodyW / 2, y - bodyH / 4);
+    ctx.lineTo(x - bodyW / 2 - armL, y - bodyH / 2 - 2 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + bodyW / 2, y - bodyH / 4);
+    ctx.lineTo(x + bodyW / 2 + armL, y - bodyH / 2 - 2 * s);
+    ctx.stroke();
+    // Gloves
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath();
+    ctx.arc(x - bodyW / 2 - armL, y - bodyH / 2 - 2 * s, 3 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + bodyW / 2 + armL, y - bodyH / 2 - 2 * s, 3 * s, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (el.type === 'player-run') {
+    // Running arms
+    ctx.beginPath();
+    ctx.moveTo(x - bodyW / 2, y - bodyH / 4);
+    ctx.lineTo(x - bodyW / 2 - armL * 0.6, y + 2 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + bodyW / 2, y - bodyH / 4);
+    ctx.lineTo(x + bodyW / 2 + armL * 0.6, y - bodyH / 2);
+    ctx.stroke();
+  } else {
+    // Relaxed arms
+    ctx.beginPath();
+    ctx.moveTo(x - bodyW / 2, y - bodyH / 4);
+    ctx.lineTo(x - bodyW / 2 - armL * 0.3, y + 4 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + bodyW / 2, y - bodyH / 4);
+    ctx.lineTo(x + bodyW / 2 + armL * 0.3, y + 4 * s);
+    ctx.stroke();
+  }
+
+  // Number on shirt
+  const numText = isGK ? (el.number || 'TW') : isTrainer ? 'TR' : (el.number || '');
+  if (numText) {
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${8 * s}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(numText, x, y - bodyH / 8 + 2 * s);
+  }
+
+  // Label below
+  if (el.label) {
+    ctx.fillStyle = '#fff';
+    ctx.font = `${9 * s}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(el.label, x, y + bodyH / 4 + 6 * s + legH + 10 * s);
+  }
+
+  // Selection highlight
+  if (selected) {
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    const top = y - bodyH / 2 - headR * 2 - 2 * s;
+    const bot = y + bodyH / 4 + 6 * s + legH + 2 * s;
+    const left = isGK ? x - bodyW / 2 - armL - 4 * s : x - bodyW / 2 - armL * 0.5 - 2 * s;
+    const right = isGK ? x + bodyW / 2 + armL + 4 * s : x + bodyW / 2 + armL * 0.5 + 2 * s;
+    ctx.strokeRect(left, top, right - left, bot - top);
+    ctx.setLineDash([]);
+  }
+}
+
 export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg: RenderConfig) {
   const { scale: s, offsetX, offsetY, selectedId, animPlaying } = cfg;
   const x = offsetX + el.x * s;
@@ -138,63 +304,75 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
     case 'player-run':
     case 'player-stand':
     case 'player-pass': {
-      const r = 16 * s;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = el.color;
-      ctx.fill();
-      ctx.strokeStyle = selected ? '#fff' : 'rgba(0,0,0,.4)';
-      ctx.lineWidth = selected ? 3 : 2;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${12 * s}px Segoe UI, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(el.number || '', x, y);
-      if (el.label) {
-        ctx.font = `${9 * s}px Segoe UI, sans-serif`;
-        ctx.fillText(el.label, x, y + r + 10 * s);
-      }
-      if (el.type === 'player-run') {
+      if (cfg.playerStyle === 'figure') {
+        drawPlayerFigure(ctx, x, y, el, s, selected);
+      } else {
+        const r = 16 * s;
         ctx.beginPath();
-        ctx.moveTo(x + r * 0.7, y - r * 0.3);
-        ctx.lineTo(x + r * 1.1, y);
-        ctx.lineTo(x + r * 0.7, y + r * 0.3);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = el.color;
         ctx.fill();
+        ctx.strokeStyle = selected ? '#fff' : 'rgba(0,0,0,.4)';
+        ctx.lineWidth = selected ? 3 : 2;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${12 * s}px Segoe UI, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(el.number || '', x, y);
+        if (el.label) {
+          ctx.font = `${9 * s}px Segoe UI, sans-serif`;
+          ctx.fillText(el.label, x, y + r + 10 * s);
+        }
+        if (el.type === 'player-run') {
+          ctx.beginPath();
+          ctx.moveTo(x + r * 0.7, y - r * 0.3);
+          ctx.lineTo(x + r * 1.1, y);
+          ctx.lineTo(x + r * 0.7, y + r * 0.3);
+          ctx.fillStyle = el.color;
+          ctx.fill();
+        }
       }
       break;
     }
     case 'goalkeeper': {
-      const r = 16 * s;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = el.color || '#f39c12';
-      ctx.fill();
-      ctx.strokeStyle = selected ? '#fff' : 'rgba(0,0,0,.4)';
-      ctx.lineWidth = selected ? 3 : 2;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${11 * s}px Segoe UI, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('TW', x, y);
+      if (cfg.playerStyle === 'figure') {
+        drawPlayerFigure(ctx, x, y, el, s, selected);
+      } else {
+        const r = 16 * s;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = el.color || '#f39c12';
+        ctx.fill();
+        ctx.strokeStyle = selected ? '#fff' : 'rgba(0,0,0,.4)';
+        ctx.lineWidth = selected ? 3 : 2;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${11 * s}px Segoe UI, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('TW', x, y);
+      }
       break;
     }
     case 'trainer': {
-      const r = 16 * s;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = '#2c3e50';
-      ctx.fill();
-      ctx.strokeStyle = selected ? '#fff' : 'rgba(255,255,255,.3)';
-      ctx.lineWidth = selected ? 3 : 2;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${10 * s}px Segoe UI, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('TR', x, y);
+      if (cfg.playerStyle === 'figure') {
+        drawPlayerFigure(ctx, x, y, el, s, selected);
+      } else {
+        const r = 16 * s;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#2c3e50';
+        ctx.fill();
+        ctx.strokeStyle = selected ? '#fff' : 'rgba(255,255,255,.3)';
+        ctx.lineWidth = selected ? 3 : 2;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${10 * s}px Segoe UI, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('TR', x, y);
+      }
       break;
     }
     case 'dummy': {

@@ -1,5 +1,6 @@
 import { useStore } from './store/useStore';
 import { TopBar } from './components/TopBar';
+import { ExerciseTabs } from './components/ExerciseTabs';
 import { Sidebar } from './components/Sidebar';
 import { FieldCanvas } from './components/FieldCanvas';
 import { AnimationBar } from './components/AnimationBar';
@@ -12,6 +13,7 @@ export default function App() {
   return (
     <div className="app">
       <TopBar />
+      <ExerciseTabs />
       <div className="main">
         <Sidebar />
         <div className="canvas-area">

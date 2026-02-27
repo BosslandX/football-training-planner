@@ -61,6 +61,7 @@ export function FieldCanvas() {
       showGrid: s.showGrid,
       selectedId: s.selectedId,
       animPlaying: s.animPlaying,
+      playerStyle: s.playerStyle,
     };
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -219,8 +220,25 @@ export function FieldCanvas() {
     }
   };
 
-  const onDoubleClick = () => {
+  const onDoubleClick = (e: React.MouseEvent) => {
     const s = useStore.getState();
+
+    // Double-click on player -> edit number
+    if (s.mode === 'select') {
+      const pos = getCanvasPos(e);
+      const fp = canvasToField(pos.x, pos.y);
+      const hit = hitTestElement(s.elements, fp.x, fp.y);
+      if (hit && (hit.type.startsWith('player') || hit.type === 'goalkeeper')) {
+        const newNum = prompt('Spielernummer:', hit.number || '');
+        if (newNum !== null) {
+          s.saveUndo();
+          s.updateElement(hit.id, { number: newNum });
+        }
+        return;
+      }
+    }
+
+    // Double-click to finish curved drawing
     if (s.mode === 'curved' && drawRef.current.points.length >= 2) {
       s.saveUndo();
       s.addDrawing({
