@@ -685,7 +685,58 @@ export function drawDrawing(ctx: CanvasRenderingContext2D, d: Drawing, cfg: Rend
       break;
     }
   }
+
+  // Draw label (number) on arrow/dashed/curved
+  if (d.label && (d.type === 'arrow' || d.type === 'dashed' || d.type === 'curved')) {
+    let lx: number, ly: number;
+    if (d.type === 'curved' && d.points && d.points.length >= 2) {
+      const mid = d.points[Math.floor(d.points.length / 2)];
+      lx = ox + mid.x * s;
+      ly = oy + mid.y * s;
+    } else {
+      lx = ox + ((d.x1 + d.x2) / 2) * s;
+      ly = oy + ((d.y1 + d.y2) / 2) * s;
+    }
+    const r = 12 * s;
+    ctx.beginPath();
+    ctx.arc(lx, ly, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5 * s;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${12 * s}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(d.label, lx, ly);
+  }
+
   ctx.restore();
+}
+
+function pointToSegmentDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax, dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.sqrt((px - ax) ** 2 + (py - ay) ** 2);
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+  const projX = ax + t * dx, projY = ay + t * dy;
+  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2);
+}
+
+export function hitTestDrawing(drawings: Drawing[], fx: number, fy: number): Drawing | null {
+  const threshold = 15;
+  for (let i = drawings.length - 1; i >= 0; i--) {
+    const d = drawings[i];
+    if (d.type === 'arrow' || d.type === 'dashed') {
+      if (pointToSegmentDist(fx, fy, d.x1, d.y1, d.x2, d.y2) < threshold) return d;
+    } else if (d.type === 'curved' && d.points && d.points.length >= 2) {
+      for (let j = 0; j < d.points.length - 1; j++) {
+        if (pointToSegmentDist(fx, fy, d.points[j].x, d.points[j].y, d.points[j + 1].x, d.points[j + 1].y) < threshold) return d;
+      }
+    }
+  }
+  return null;
 }
 
 export function hitTestElement(elements: FieldElement[], fx: number, fy: number): FieldElement | null {

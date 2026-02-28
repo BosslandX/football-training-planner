@@ -57,6 +57,7 @@ interface AppState {
   togglePlayerStyle: () => void;
   addDrawing: (d: Omit<Drawing, 'id'>) => void;
   removeDrawing: (id: number) => void;
+  updateDrawing: (id: number, updates: Partial<Drawing>) => void;
 
   // Animation
   setAnimTime: (t: number) => void;
@@ -191,6 +192,10 @@ export const useStore = create<AppState>((set, get) => ({
 
   removeDrawing: (id) => set(s => ({
     drawings: s.drawings.filter(d => d.id !== id),
+  })),
+
+  updateDrawing: (id, updates) => set(s => ({
+    drawings: s.drawings.map(d => d.id === id ? { ...d, ...updates } : d),
   })),
 
   setAnimTime: (t) => set({ animTime: t }),

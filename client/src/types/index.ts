@@ -40,6 +40,7 @@ export interface Drawing {
   y2: number;
   points?: { x: number; y: number }[];
   text?: string;
+  label?: string;
 }
 
 export interface Phase {

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
-import { drawField, drawElement, drawDrawing, hitTestElement } from '../utils/renderer';
+import { drawField, drawElement, drawDrawing, hitTestElement, hitTestDrawing } from '../utils/renderer';
 import type { ElementType } from '../types';
 import { ContextMenu } from './ContextMenu';
 
@@ -233,6 +233,17 @@ export function FieldCanvas() {
         if (newNum !== null) {
           s.saveUndo();
           s.updateElement(hit.id, { number: newNum });
+        }
+        return;
+      }
+
+      // Double-click on drawing (arrow/dashed/curved) -> edit label
+      const hitDraw = hitTestDrawing(s.drawings, fp.x, fp.y);
+      if (hitDraw && (hitDraw.type === 'arrow' || hitDraw.type === 'dashed' || hitDraw.type === 'curved')) {
+        const newLabel = prompt('Nummer:', hitDraw.label || '');
+        if (newLabel !== null) {
+          s.saveUndo();
+          s.updateDrawing(hitDraw.id, { label: newLabel || undefined });
         }
         return;
       }
