@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { CATEGORIES, ELEMENT_TYPE_NAMES } from '../types';
+import { CATEGORIES, ELEMENT_TYPE_NAMES, TEAM_COLORS } from '../types';
 import type { ElementType } from '../types';
 
 export function ConceptPanel() {
@@ -157,6 +157,20 @@ export function ConceptPanel() {
                       placeholder="z.B. LV" />
                   </div>
                 </>
+              )}
+              {['player-home', 'player-away', 'player-neutral', 'goalkeeper', 'cone', 'flag', 'ring'].includes(selectedEl.type) && (
+                <div className="prop-row">
+                  <label>Farbe</label>
+                  <div className="color-row">
+                    {TEAM_COLORS.map(c => (
+                      <div key={c.value}
+                        className={`color-swatch${selectedEl.color === c.value ? ' active' : ''}`}
+                        style={{ background: c.value }}
+                        title={c.name}
+                        onClick={() => store.updateElement(selectedEl.id, { color: c.value })} />
+                    ))}
+                  </div>
+                </div>
               )}
               <div className="prop-row">
                 <label>Drehung</label>
