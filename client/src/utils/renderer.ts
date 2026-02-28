@@ -682,9 +682,16 @@ export function drawDrawing(ctx: CanvasRenderingContext2D, d: Drawing, cfg: Rend
         }
         ctx.stroke();
 
-        // Arrowhead at end
+        // Arrowhead at end — look ~30px back for stable direction
         const last = pts[pts.length - 1];
-        const prev = pts.length > 2 ? pts[pts.length - 2] : pts[0];
+        let prev = pts[0];
+        let bestDist = 0;
+        for (let i = pts.length - 2; i >= 0; i--) {
+          const pdx = last.x - pts[i].x, pdy = last.y - pts[i].y;
+          const d2 = pdx * pdx + pdy * pdy;
+          if (d2 >= 900) { prev = pts[i]; bestDist = d2; break; } // ~30px
+          if (d2 > bestDist) { prev = pts[i]; bestDist = d2; }
+        }
         const a = Math.atan2(last.y - prev.y, last.x - prev.x);
         const hl = 12 * s;
         ctx.beginPath();
