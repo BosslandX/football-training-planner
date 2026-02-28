@@ -643,17 +643,48 @@ export function drawDrawing(ctx: CanvasRenderingContext2D, d: Drawing, cfg: Rend
     }
     case 'curved': {
       if (d.points && d.points.length >= 2) {
-        ctx.beginPath();
-        ctx.moveTo(ox + d.points[0].x * s, oy + d.points[0].y * s);
-        for (let i = 1; i < d.points.length - 1; i++) {
-          const xc = (d.points[i].x + d.points[i + 1].x) / 2;
-          const yc = (d.points[i].y + d.points[i + 1].y) / 2;
-          ctx.quadraticCurveTo(ox + d.points[i].x * s, oy + d.points[i].y * s, ox + xc * s, oy + yc * s);
+        // Build cumulative distances along the path
+        const pts = d.points;
+        const dists = [0];
+        for (let i = 1; i < pts.length; i++) {
+          const pdx = pts[i].x - pts[i - 1].x, pdy = pts[i].y - pts[i - 1].y;
+          dists.push(dists[i - 1] + Math.sqrt(pdx * pdx + pdy * pdy));
         }
-        const last = d.points[d.points.length - 1];
-        const prev = d.points.length > 2 ? d.points[d.points.length - 2] : d.points[0];
-        ctx.quadraticCurveTo(ox + prev.x * s, oy + prev.y * s, ox + last.x * s, oy + last.y * s);
+        const totalLen = dists[dists.length - 1];
+        if (totalLen < 1) break;
+
+        // Sample point + normal at distance along path
+        const sampleAt = (dist: number) => {
+          let seg = 0;
+          while (seg < dists.length - 2 && dists[seg + 1] < dist) seg++;
+          const segLen = dists[seg + 1] - dists[seg];
+          const t = segLen > 0 ? (dist - dists[seg]) / segLen : 0;
+          const px = pts[seg].x + (pts[seg + 1].x - pts[seg].x) * t;
+          const py = pts[seg].y + (pts[seg + 1].y - pts[seg].y) * t;
+          const tdx = pts[seg + 1].x - pts[seg].x;
+          const tdy = pts[seg + 1].y - pts[seg].y;
+          const len = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+          return { x: px, y: py, nx: -tdy / len, ny: tdx / len };
+        };
+
+        // Draw wavy line along path
+        const waveAmp = 6;
+        const waveFreq = 0.35;
+        const steps = Math.max(60, Math.ceil(totalLen / 2));
+        ctx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const dist = (i / steps) * totalLen;
+          const p = sampleAt(dist);
+          const wave = Math.sin(dist * waveFreq) * waveAmp;
+          const sx = ox + (p.x + p.nx * wave) * s;
+          const sy = oy + (p.y + p.ny * wave) * s;
+          if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+        }
         ctx.stroke();
+
+        // Arrowhead at end
+        const last = pts[pts.length - 1];
+        const prev = pts.length > 2 ? pts[pts.length - 2] : pts[0];
         const a = Math.atan2(last.y - prev.y, last.x - prev.x);
         const hl = 12 * s;
         ctx.beginPath();

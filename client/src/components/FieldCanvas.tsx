@@ -111,13 +111,39 @@ export function FieldCanvas() {
         ctx.strokeRect(ox + zx * sc, oy + zy * sc, zw * sc, zh * sc);
         ctx.setLineDash([]);
       } else if (s.mode === 'curved' && dr.points.length > 0) {
-        ctx.beginPath();
-        ctx.moveTo(ox + dr.points[0].x * sc, oy + dr.points[0].y * sc);
-        for (let i = 1; i < dr.points.length; i++) {
-          ctx.lineTo(ox + dr.points[i].x * sc, oy + dr.points[i].y * sc);
+        // Live preview: wavy line along sampled path
+        const allPts = [...dr.points, dr.end];
+        const dists = [0];
+        for (let i = 1; i < allPts.length; i++) {
+          const pdx = allPts[i].x - allPts[i - 1].x, pdy = allPts[i].y - allPts[i - 1].y;
+          dists.push(dists[i - 1] + Math.sqrt(pdx * pdx + pdy * pdy));
         }
-        ctx.lineTo(ox + dr.end.x * sc, oy + dr.end.y * sc);
-        ctx.stroke();
+        const totalLen = dists[dists.length - 1];
+        if (totalLen > 1) {
+          const sampleAt = (dist: number) => {
+            let seg = 0;
+            while (seg < dists.length - 2 && dists[seg + 1] < dist) seg++;
+            const segLen = dists[seg + 1] - dists[seg];
+            const t = segLen > 0 ? (dist - dists[seg]) / segLen : 0;
+            const px = allPts[seg].x + (allPts[seg + 1].x - allPts[seg].x) * t;
+            const py = allPts[seg].y + (allPts[seg + 1].y - allPts[seg].y) * t;
+            const tdx = allPts[seg + 1].x - allPts[seg].x;
+            const tdy = allPts[seg + 1].y - allPts[seg].y;
+            const len = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+            return { x: px, y: py, nx: -tdy / len, ny: tdx / len };
+          };
+          const steps = Math.max(60, Math.ceil(totalLen / 2));
+          ctx.beginPath();
+          for (let i = 0; i <= steps; i++) {
+            const dist = (i / steps) * totalLen;
+            const p = sampleAt(dist);
+            const wave = Math.sin(dist * 0.35) * 6;
+            const sx = ox + (p.x + p.nx * wave) * sc;
+            const sy = oy + (p.y + p.ny * wave) * sc;
+            if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+          }
+          ctx.stroke();
+        }
       } else {
         if (s.mode === 'dashed') ctx.setLineDash([8 * sc, 6 * sc]);
         ctx.beginPath();
