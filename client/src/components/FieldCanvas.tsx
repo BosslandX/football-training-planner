@@ -184,14 +184,9 @@ export function FieldCanvas() {
         s.setSelected(null);
       }
     } else if (['arrow', 'dashed', 'zone'].includes(s.mode)) {
-      // Reset any leftover curved state, start fresh line
       drawRef.current = { start: fp, end: null, points: [] };
     } else if (s.mode === 'curved') {
-      if (!drawRef.current.start) {
-        drawRef.current = { start: fp, end: null, points: [fp] };
-      } else {
-        drawRef.current.points.push(fp);
-      }
+      drawRef.current = { start: fp, end: null, points: [fp] };
     } else if (s.mode === 'text') {
       const text = prompt('Text eingeben:');
       if (text) {
@@ -216,6 +211,13 @@ export function FieldCanvas() {
       render();
     } else if (s.mode === 'curved' && drawRef.current.start) {
       drawRef.current.end = fp;
+      // Sample points while dragging (min 8px apart)
+      const pts = drawRef.current.points;
+      const last = pts[pts.length - 1];
+      const dx = fp.x - last.x, dy = fp.y - last.y;
+      if (dx * dx + dy * dy > 64) {
+        pts.push(fp);
+      }
       render();
     } else if (s.mode === 'select') {
       const hit = hitTestElement(s.elements, fp.x, fp.y);
@@ -239,6 +241,18 @@ export function FieldCanvas() {
         y1: drawRef.current.start.y,
         x2: drawRef.current.end.x,
         y2: drawRef.current.end.y,
+        color: s.drawColor,
+        width: 2.5,
+      });
+      drawRef.current = { start: null, end: null, points: [] };
+    }
+
+    if (s.mode === 'curved' && drawRef.current.points.length >= 2) {
+      s.saveUndo();
+      s.addDrawing({
+        type: 'curved',
+        x1: 0, y1: 0, x2: 0, y2: 0,
+        points: [...drawRef.current.points],
         color: s.drawColor,
         width: 2.5,
       });
@@ -275,18 +289,6 @@ export function FieldCanvas() {
       }
     }
 
-    // Double-click to finish curved drawing
-    if (s.mode === 'curved' && drawRef.current.points.length >= 2) {
-      s.saveUndo();
-      s.addDrawing({
-        type: 'curved',
-        x1: 0, y1: 0, x2: 0, y2: 0,
-        points: [...drawRef.current.points],
-        color: s.drawColor,
-        width: 2.5,
-      });
-      drawRef.current = { start: null, end: null, points: [] };
-    }
   };
 
   const onContextMenu = (e: React.MouseEvent) => {
