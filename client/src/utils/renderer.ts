@@ -667,37 +667,44 @@ export function drawDrawing(ctx: CanvasRenderingContext2D, d: Drawing, cfg: Rend
           return { x: px, y: py, nx: -tdy / len, ny: tdx / len };
         };
 
-        // Draw wavy line along path
+        // Draw wavy line, fading wave out near the end for clean arrowhead
         const waveAmp = 6;
         const waveFreq = 0.35;
+        const hl = 14 * s;
+        const fadeStart = Math.max(0, totalLen - 25); // fade wave in last 25px
+        const waveEnd = Math.max(0, totalLen - 12); // stop wave before arrow tip
         const steps = Math.max(60, Math.ceil(totalLen / 2));
+
+        // Direction at the end (use point ~20% back for stability)
+        const lookbackDist = Math.max(totalLen * 0.2, 30);
+        const pEnd = sampleAt(totalLen);
+        const pBack = sampleAt(Math.max(0, totalLen - lookbackDist));
+        const a = Math.atan2(pEnd.y - pBack.y, pEnd.x - pBack.x);
+
+        // Arrow tip is at the path endpoint
+        const tipX = ox + pEnd.x * s;
+        const tipY = oy + pEnd.y * s;
+
         ctx.beginPath();
         for (let i = 0; i <= steps; i++) {
-          const dist = (i / steps) * totalLen;
+          const dist = (i / steps) * waveEnd;
           const p = sampleAt(dist);
-          const wave = Math.sin(dist * waveFreq) * waveAmp;
+          // Fade wave amplitude to 0 near the end
+          const fade = dist > fadeStart ? 1 - (dist - fadeStart) / (waveEnd - fadeStart) : 1;
+          const wave = Math.sin(dist * waveFreq) * waveAmp * fade;
           const sx = ox + (p.x + p.nx * wave) * s;
           const sy = oy + (p.y + p.ny * wave) * s;
           if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
         }
+        // Straight line into arrow tip
+        ctx.lineTo(tipX, tipY);
         ctx.stroke();
 
-        // Arrowhead at end — look ~30px back for stable direction
-        const last = pts[pts.length - 1];
-        let prev = pts[0];
-        let bestDist = 0;
-        for (let i = pts.length - 2; i >= 0; i--) {
-          const pdx = last.x - pts[i].x, pdy = last.y - pts[i].y;
-          const d2 = pdx * pdx + pdy * pdy;
-          if (d2 >= 900) { prev = pts[i]; bestDist = d2; break; } // ~30px
-          if (d2 > bestDist) { prev = pts[i]; bestDist = d2; }
-        }
-        const a = Math.atan2(last.y - prev.y, last.x - prev.x);
-        const hl = 12 * s;
+        // Arrowhead pointing outward
         ctx.beginPath();
-        ctx.moveTo(ox + last.x * s, oy + last.y * s);
-        ctx.lineTo(ox + last.x * s - hl * Math.cos(a - 0.4), oy + last.y * s - hl * Math.sin(a - 0.4));
-        ctx.lineTo(ox + last.x * s - hl * Math.cos(a + 0.4), oy + last.y * s - hl * Math.sin(a + 0.4));
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(tipX - hl * Math.cos(a - 0.45), tipY - hl * Math.sin(a - 0.45));
+        ctx.lineTo(tipX - hl * Math.cos(a + 0.45), tipY - hl * Math.sin(a + 0.45));
         ctx.closePath();
         ctx.fill();
       }
