@@ -739,9 +739,18 @@ export function hitTestDrawing(drawings: Drawing[], fx: number, fy: number): Dra
   return null;
 }
 
-export function hitTestElement(elements: FieldElement[], fx: number, fy: number): FieldElement | null {
+export function hitTestElement(
+  elements: FieldElement[], fx: number, fy: number,
+  animTime?: number, animPlaying?: boolean
+): FieldElement | null {
   for (let i = elements.length - 1; i >= 0; i--) {
     const el = elements[i];
+    // During playback, skip elements outside their visible time range
+    if (animPlaying && animTime !== undefined) {
+      const st = el.startTime ?? 0;
+      const et = el.endTime ?? -1;
+      if (animTime < st || (et >= 0 && animTime > et)) continue;
+    }
     const dx = fx - el.x, dy = fy - el.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const hitR = el.type.includes('goal') ? 30 : el.type === 'ladder' ? 28 : 20;

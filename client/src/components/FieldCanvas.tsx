@@ -73,7 +73,21 @@ export function FieldCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawField(ctx, cfg);
     s.drawings.forEach(d => drawDrawing(ctx, d, cfg));
-    s.elements.forEach(el => drawElement(ctx, el, cfg));
+    s.elements.forEach(el => {
+      const st = el.startTime ?? 0;
+      const et = el.endTime ?? -1;
+      const before = s.animTime < st;
+      const after = et >= 0 && s.animTime > et;
+      if (s.animPlaying && (before || after)) return; // hide during playback
+      if (!s.animPlaying && (before || after)) {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        drawElement(ctx, el, cfg);
+        ctx.restore();
+        return;
+      }
+      drawElement(ctx, el, cfg);
+    });
 
     // In-progress drawing
     const dr = drawRef.current;
@@ -311,6 +325,8 @@ export function FieldCanvas() {
       number: type.startsWith('player') ? String(playerCount + 1) : '',
       label: '',
       keyframes: [],
+      startTime: s.animTime,
+      endTime: -1,
     });
   };
 

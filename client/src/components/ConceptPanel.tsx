@@ -179,6 +179,22 @@ export function ConceptPanel() {
                   onChange={e => store.updateElement(selectedEl.id, { rotation: Number(e.target.value) })} />
               </div>
               <div className="prop-row">
+                <label>Start (s)</label>
+                <input type="number" className="prop-input" step={0.1} min={0}
+                  value={selectedEl.startTime ?? 0}
+                  onChange={e => store.updateElement(selectedEl.id, { startTime: Math.max(0, Number(e.target.value)) })} />
+              </div>
+              <div className="prop-row">
+                <label>Ende (s)</label>
+                <input type="number" className="prop-input" step={0.1} min={-1}
+                  value={(selectedEl.endTime ?? -1) < 0 ? '' : selectedEl.endTime}
+                  placeholder="∞"
+                  onChange={e => {
+                    const v = e.target.value;
+                    store.updateElement(selectedEl.id, { endTime: v === '' ? -1 : Number(v) });
+                  }} />
+              </div>
+              <div className="prop-row">
                 <label>X</label>
                 <input type="number" className="prop-input" value={Math.round(selectedEl.x)}
                   onChange={e => store.updateElement(selectedEl.id, { x: Number(e.target.value) })} />

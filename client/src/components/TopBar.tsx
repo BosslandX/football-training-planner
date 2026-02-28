@@ -81,6 +81,69 @@ export function TopBar() {
     }
   };
 
+  const handleExportGIF = async () => {
+    try {
+      const state = useStore.getState();
+      const data = state.getExportData();
+      const resp = await fetch('/api/export/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, animDuration: state.animDuration, fps: 15 }),
+      });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `${data.concept.name || 'training'}.gif`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+      } else {
+        alert('GIF-Export fehlgeschlagen');
+      }
+    } catch {
+      alert('GIF-Export fehlgeschlagen: Server nicht erreichbar');
+    }
+  };
+
+  const handleExportVideo = () => {
+    const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const state = useStore.getState();
+    const stream = canvas.captureStream(30);
+    const chunks: Blob[] = [];
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `${state.concept.name || 'training'}.webm`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // Reset animation and start recording
+    state.setAnimTime(0);
+    state.interpolateElements(0);
+    recorder.start();
+    state.setAnimPlaying(true);
+
+    // Watch for animation to stop
+    const unsub = useStore.subscribe((s) => {
+      if (!s.animPlaying) {
+        recorder.stop();
+        unsub();
+      }
+    });
+  };
+
   const handleReset = () => {
     if (confirm('Alles zurücksetzen?')) {
       saveUndo();
@@ -131,6 +194,8 @@ export function TopBar() {
         <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={toggleConcept}>📋 Konzeption</button>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>
+        <button className="topbar-btn" onClick={handleExportGIF}>🎬 GIF</button>
+        <button className="topbar-btn" onClick={handleExportVideo}>🎥 Video</button>
         <button className="topbar-btn" onClick={handleReset}>🗑️ Reset</button>
       </div>
     </div>

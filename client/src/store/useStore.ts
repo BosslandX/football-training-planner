@@ -137,8 +137,9 @@ export const useStore = create<AppState>((set, get) => ({
 
   addElement: (el) => {
     const id = get().nextId;
+    const defaults = { startTime: el.startTime ?? get().animTime, endTime: el.endTime ?? -1 };
     set(s => ({
-      elements: [...s.elements, { ...el, id } as FieldElement],
+      elements: [...s.elements, { ...el, ...defaults, id } as FieldElement],
       nextId: s.nextId + 1,
       selectedId: id,
     }));
@@ -159,7 +160,7 @@ export const useStore = create<AppState>((set, get) => ({
     if (!el) return;
     const newId = get().nextId;
     set(s => ({
-      elements: [...s.elements, { ...el, id: newId, x: el.x + 20, y: el.y + 20, keyframes: [] }],
+      elements: [...s.elements, { ...el, id: newId, x: el.x + 20, y: el.y + 20, keyframes: [], startTime: el.startTime, endTime: el.endTime }],
       nextId: s.nextId + 1,
       selectedId: newId,
     }));
@@ -234,6 +235,9 @@ export const useStore = create<AppState>((set, get) => ({
 
   interpolateElements: (t) => set(s => ({
     elements: s.elements.map(el => {
+      // Skip elements outside their visible time range
+      if (t < (el.startTime ?? 0)) return el;
+      if ((el.endTime ?? -1) >= 0 && t > el.endTime) return el;
       if (!el.keyframes || el.keyframes.length < 2) return el;
       const first = el.keyframes[0];
       const last = el.keyframes[el.keyframes.length - 1];
@@ -381,6 +385,8 @@ export const useStore = create<AppState>((set, get) => ({
         ...el,
         id: nextId++,
         keyframes: [],
+        startTime: (el as any).startTime ?? 0,
+        endTime: (el as any).endTime ?? -1,
       } as FieldElement));
       return {
         concept: ex.concept,

@@ -27,6 +27,8 @@ export interface FieldElement {
   number: string;
   label: string;
   keyframes: Keyframe[];
+  startTime: number;
+  endTime: number;
 }
 
 export interface Drawing {

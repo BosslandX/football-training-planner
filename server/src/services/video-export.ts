@@ -379,6 +379,10 @@ function buildAnimationHtml(
       drawField();
       drawDrawings();
       elements.forEach(el => {
+        const st = el.startTime != null ? el.startTime : 0;
+        const et = el.endTime != null ? el.endTime : -1;
+        if (t < st) return;
+        if (et >= 0 && t > et) return;
         const pos = interpolate(el, t);
         drawEl(el, pos);
       });
