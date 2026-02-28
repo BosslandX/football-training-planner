@@ -169,6 +169,11 @@ export function FieldCanvas() {
     const fp = canvasToField(pos.x, pos.y);
     const s = useStore.getState();
 
+    // Reset draw state when not in a drawing mode (e.g. switched away from curved)
+    if (!['arrow', 'dashed', 'zone', 'curved'].includes(s.mode)) {
+      drawRef.current = { start: null, end: null, points: [] };
+    }
+
     if (s.mode === 'select') {
       const hit = hitTestElement(s.elements, fp.x, fp.y);
       if (hit) {
@@ -179,6 +184,7 @@ export function FieldCanvas() {
         s.setSelected(null);
       }
     } else if (['arrow', 'dashed', 'zone'].includes(s.mode)) {
+      // Reset any leftover curved state, start fresh line
       drawRef.current = { start: fp, end: null, points: [] };
     } else if (s.mode === 'curved') {
       if (!drawRef.current.start) {
@@ -205,7 +211,7 @@ export function FieldCanvas() {
         x: fp.x - dragRef.current.offsetX,
         y: fp.y - dragRef.current.offsetY,
       });
-    } else if (drawRef.current.start && s.mode !== 'curved') {
+    } else if (drawRef.current.start && ['arrow', 'dashed', 'zone'].includes(s.mode)) {
       drawRef.current.end = fp;
       render();
     } else if (s.mode === 'curved' && drawRef.current.start) {
@@ -225,7 +231,7 @@ export function FieldCanvas() {
       if (canvasRef.current) canvasRef.current.style.cursor = 'default';
     }
 
-    if (drawRef.current.start && drawRef.current.end && s.mode !== 'curved') {
+    if (drawRef.current.start && drawRef.current.end && ['arrow', 'dashed', 'zone'].includes(s.mode)) {
       s.saveUndo();
       s.addDrawing({
         type: s.mode as 'arrow' | 'dashed' | 'zone',
