@@ -22,6 +22,7 @@ interface AppState {
   fieldType: FieldType;
   showGrid: boolean;
   playerStyle: 'circle' | 'figure';
+  zoom: number;
 
   // Animation
   animTime: number;
@@ -55,6 +56,7 @@ interface AppState {
   setFieldType: (type: FieldType) => void;
   toggleGrid: () => void;
   togglePlayerStyle: () => void;
+  setZoom: (z: number) => void;
   addDrawing: (d: Omit<Drawing, 'id'>) => void;
   removeDrawing: (id: number) => void;
   updateDrawing: (id: number, updates: Partial<Drawing>) => void;
@@ -121,6 +123,7 @@ export const useStore = create<AppState>((set, get) => ({
   fieldType: 'full-green',
   showGrid: false,
   playerStyle: 'circle',
+  zoom: 1,
   animTime: 0,
   animDuration: 5,
   animSpeed: 1,
@@ -181,6 +184,7 @@ export const useStore = create<AppState>((set, get) => ({
   setFieldType: (type) => set({ fieldType: type }),
   toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
   togglePlayerStyle: () => set(s => ({ playerStyle: s.playerStyle === 'circle' ? 'figure' : 'circle' })),
+  setZoom: (z) => set({ zoom: Math.max(0.5, Math.min(2.0, z)) }),
 
   addDrawing: (d) => {
     const id = get().nextId;

@@ -5,7 +5,7 @@ import type { ToolMode, FieldType } from '../types';
 const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
 
 export function TopBar() {
-  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle } = useStore();
+  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, zoom, setZoom } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +118,12 @@ export function TopBar() {
         <button className={`topbar-btn ${playerStyle === 'figure' ? 'active' : ''}`} onClick={togglePlayerStyle}>
           {playerStyle === 'figure' ? '👤 Figuren' : '⚪ Kreise'}
         </button>
+      </div>
+      <div className="topbar-divider" />
+      <div className="topbar-group">
+        <button className="topbar-btn" onClick={() => setZoom(zoom - 0.25)} disabled={zoom <= 0.5}>-</button>
+        <span className="zoom-label">{Math.round(zoom * 100)}%</span>
+        <button className="topbar-btn" onClick={() => setZoom(zoom + 0.25)} disabled={zoom >= 2.0}>+</button>
       </div>
       <div className="topbar-spacer" />
       <div className="topbar-group">

@@ -36,11 +36,17 @@ export function FieldCanvas() {
     const fieldH = getFieldH();
     const fw = FIELD_W + FIELD_PAD * 2;
     const fh = fieldH + FIELD_PAD * 2;
-    const scale = Math.min(ww / fw, wh / fh, 1.2);
+    const zoom = useStore.getState().zoom;
+    const baseScale = Math.min(ww / fw, wh / fh, 1.2);
+    const scale = baseScale * zoom;
     canvas.width = fw * scale;
     canvas.height = fh * scale;
     scaleRef.current = scale;
     offsetRef.current = { x: FIELD_PAD * scale, y: FIELD_PAD * scale };
+
+    // Vertically center canvas when smaller than wrapper
+    const extraY = Math.max(0, (wrapper.clientHeight - canvas.height - 20) / 2);
+    canvas.style.marginTop = extraY > 0 ? `${extraY}px` : '0';
   }, [getFieldH]);
 
   const render = useCallback(() => {
@@ -131,7 +137,7 @@ export function FieldCanvas() {
   useEffect(() => {
     resize();
     render();
-  }, [store.fieldType, store.showConcept, resize, render]);
+  }, [store.fieldType, store.showConcept, store.zoom, resize, render]);
 
   const canvasToField = (cx: number, cy: number) => ({
     x: (cx - offsetRef.current.x) / scaleRef.current,

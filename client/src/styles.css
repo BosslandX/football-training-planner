@@ -48,6 +48,13 @@ body {
 .topbar-btn.active { background: var(--highlight); }
 .topbar-group { display: flex; gap: 4px; align-items: center; }
 .topbar-spacer { flex: 1; }
+.zoom-label {
+  font-size: 13px;
+  min-width: 40px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
 
 /* EXERCISE TABS */
 .exercise-tabs {
@@ -173,12 +180,14 @@ body {
 .canvas-wrapper {
   flex: 1;
   position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: auto;
+  padding: 10px;
 }
-canvas { box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+canvas {
+  box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  display: block;
+  margin: 0 auto;
+}
 
 /* ANIMATION BAR */
 .anim-bar {
