@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
+import { SessionBrowser } from './SessionBrowser';
 import type { ToolMode, FieldType } from '../types';
 
 const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
@@ -8,6 +9,7 @@ export function TopBar() {
   const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, zoom, setZoom } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showSessionBrowser, setShowSessionBrowser] = useState(false);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,7 +192,7 @@ export function TopBar() {
       </div>
       <div className="topbar-spacer" />
       <div className="topbar-group">
-        {/* Import vorübergehend ausgeblendet */}
+        <button className="topbar-btn" onClick={() => setShowSessionBrowser(true)}>📂 Sessions</button>
         <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={toggleConcept}>📋 Konzeption</button>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>
@@ -198,6 +200,7 @@ export function TopBar() {
         <button className="topbar-btn" onClick={handleExportVideo}>🎥 Video</button>
         <button className="topbar-btn" onClick={handleReset}>🗑️ Reset</button>
       </div>
+      {showSessionBrowser && <SessionBrowser onClose={() => setShowSessionBrowser(false)} />}
     </div>
   );
 }

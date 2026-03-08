@@ -3,6 +3,7 @@ import cors from 'cors';
 import { exportPDFRoute } from './routes/export-pdf.js';
 import { exportVideoRoute } from './routes/export-video.js';
 import { importTrainingPlanRoute } from './routes/import-training-plan.js';
+import { sessionsRoute } from './routes/sessions.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -16,6 +17,9 @@ app.use('/api/export', exportVideoRoute);
 
 // Import routes
 app.use('/api/import', importTrainingPlanRoute);
+
+// Session browser (fusball research DB)
+app.use('/api/sessions', sessionsRoute);
 
 // Health check
 app.get('/api/health', (_req, res) => {
