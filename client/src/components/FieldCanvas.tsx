@@ -1,7 +1,9 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { drawField, drawElement, drawDrawing, hitTestElement, hitTestDrawing } from '../utils/renderer';
+import { preloadPlayerImages } from '../utils/playerImageCache';
 import type { ElementType } from '../types';
+import { TEAM_COLORS } from '../types';
 import { ContextMenu } from './ContextMenu';
 
 const FIELD_W = 680;
@@ -13,8 +15,8 @@ export function FieldCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: number; offsetX: number; offsetY: number } | null>(null);
-  const drawRef = useRef<{ start: { x: number; y: number } | null; end: { x: number; y: number } | null; points: { x: number; y: number }[] }>({
-    start: null, end: null, points: [],
+  const drawRef = useRef<{ start: { x: number; y: number } | null; end: { x: number; y: number } | null; points: { x: number; y: number }[]; dragged: boolean; clickPlaced: boolean }>({
+    start: null, end: null, points: [], dragged: false, clickPlaced: false,
   });
   const scaleRef = useRef(1);
   const offsetRef = useRef({ x: 0, y: 0 });
@@ -68,6 +70,7 @@ export function FieldCanvas() {
       selectedId: s.selectedId,
       animPlaying: s.animPlaying,
       playerStyle: s.playerStyle,
+      playerScale: s.playerScale,
     };
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -110,36 +113,23 @@ export function FieldCanvas() {
         ctx.fillRect(ox + zx * sc, oy + zy * sc, zw * sc, zh * sc);
         ctx.strokeRect(ox + zx * sc, oy + zy * sc, zw * sc, zh * sc);
         ctx.setLineDash([]);
-      } else if (s.mode === 'curved' && dr.points.length > 0) {
-        // Live preview: wavy line along sampled path
-        const allPts = [...dr.points, dr.end];
-        const dists = [0];
-        for (let i = 1; i < allPts.length; i++) {
-          const pdx = allPts[i].x - allPts[i - 1].x, pdy = allPts[i].y - allPts[i - 1].y;
-          dists.push(dists[i - 1] + Math.sqrt(pdx * pdx + pdy * pdy));
-        }
-        const totalLen = dists[dists.length - 1];
+      } else if (s.mode === 'curved') {
+        // Live preview: wavy line from start to end
+        const ddx = dr.end.x - dr.start.x, ddy = dr.end.y - dr.start.y;
+        const totalLen = Math.sqrt(ddx * ddx + ddy * ddy);
         if (totalLen > 1) {
-          const sampleAt = (dist: number) => {
-            let seg = 0;
-            while (seg < dists.length - 2 && dists[seg + 1] < dist) seg++;
-            const segLen = dists[seg + 1] - dists[seg];
-            const t = segLen > 0 ? (dist - dists[seg]) / segLen : 0;
-            const px = allPts[seg].x + (allPts[seg + 1].x - allPts[seg].x) * t;
-            const py = allPts[seg].y + (allPts[seg + 1].y - allPts[seg].y) * t;
-            const tdx = allPts[seg + 1].x - allPts[seg].x;
-            const tdy = allPts[seg + 1].y - allPts[seg].y;
-            const len = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
-            return { x: px, y: py, nx: -tdy / len, ny: tdx / len };
-          };
+          const angle = Math.atan2(ddy, ddx);
+          const nx = -Math.sin(angle), ny = Math.cos(angle);
           const steps = Math.max(60, Math.ceil(totalLen / 2));
           ctx.beginPath();
           for (let i = 0; i <= steps; i++) {
             const dist = (i / steps) * totalLen;
-            const p = sampleAt(dist);
+            const t = dist / totalLen;
+            const px = dr.start.x + ddx * t;
+            const py = dr.start.y + ddy * t;
             const wave = Math.sin(dist * 0.35) * 6;
-            const sx = ox + (p.x + p.nx * wave) * sc;
-            const sy = oy + (p.y + p.ny * wave) * sc;
+            const sx = ox + (px + nx * wave) * sc;
+            const sy = oy + (py + ny * wave) * sc;
             if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
           }
           ctx.stroke();
@@ -155,6 +145,12 @@ export function FieldCanvas() {
       ctx.restore();
     }
   }, []);
+
+  // Preload SVG player images on mount
+  useEffect(() => {
+    const colors = TEAM_COLORS.map(c => c.value);
+    preloadPlayerImages(colors).then(() => render());
+  }, [render]);
 
   // Resize & render on relevant state changes
   useEffect(() => {
@@ -197,10 +193,30 @@ export function FieldCanvas() {
 
     // Reset draw state when not in a drawing mode (e.g. switched away from curved)
     if (!['arrow', 'dashed', 'zone', 'curved'].includes(s.mode)) {
-      drawRef.current = { start: null, end: null, points: [] };
+      drawRef.current = { start: null, end: null, points: [], dragged: false, clickPlaced: false };
     }
 
     if (s.mode === 'select') {
+      // Click-to-place: if a tool is selected, place element
+      if (s.placementType) {
+        s.saveUndo();
+        const playerCount = s.elements.filter(el => el.type.startsWith('player')).length;
+        s.addElement({
+          type: s.placementType,
+          x: fp.x,
+          y: fp.y,
+          color: s.selectedColor,
+          rotation: 0,
+          number: s.placementType.startsWith('player') ? String(playerCount + 1) : '',
+          label: '',
+          keyframes: [],
+          startTime: s.animTime,
+          endTime: -1,
+          scale: s.playerScale,
+        });
+        return;
+      }
+
       const hit = hitTestElement(s.elements, fp.x, fp.y);
       if (hit) {
         s.setSelected(hit.id);
@@ -209,10 +225,23 @@ export function FieldCanvas() {
       } else {
         s.setSelected(null);
       }
-    } else if (['arrow', 'dashed', 'zone'].includes(s.mode)) {
-      drawRef.current = { start: fp, end: null, points: [] };
-    } else if (s.mode === 'curved') {
-      drawRef.current = { start: fp, end: null, points: [fp] };
+    } else if (['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      if (drawRef.current.clickPlaced && drawRef.current.start) {
+        // Second click → finalize drawing
+        s.saveUndo();
+        s.addDrawing({
+          type: s.mode as 'arrow' | 'dashed' | 'curved' | 'zone',
+          x1: drawRef.current.start.x,
+          y1: drawRef.current.start.y,
+          x2: fp.x,
+          y2: fp.y,
+          color: s.drawColor,
+          width: 2.5,
+        });
+        drawRef.current = { start: null, end: null, points: [], dragged: false, clickPlaced: false };
+      } else {
+        drawRef.current = { start: fp, end: null, points: [], dragged: false, clickPlaced: false };
+      }
     } else if (s.mode === 'text') {
       const text = prompt('Text eingeben:');
       if (text) {
@@ -232,22 +261,19 @@ export function FieldCanvas() {
         x: fp.x - dragRef.current.offsetX,
         y: fp.y - dragRef.current.offsetY,
       });
-    } else if (drawRef.current.start && ['arrow', 'dashed', 'zone'].includes(s.mode)) {
+    } else if (drawRef.current.start && ['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
       drawRef.current.end = fp;
-      render();
-    } else if (s.mode === 'curved' && drawRef.current.start) {
-      drawRef.current.end = fp;
-      // Sample points while dragging (min 8px apart)
-      const pts = drawRef.current.points;
-      const last = pts[pts.length - 1];
-      const dx = fp.x - last.x, dy = fp.y - last.y;
-      if (dx * dx + dy * dy > 64) {
-        pts.push(fp);
+      if (!drawRef.current.clickPlaced) {
+        drawRef.current.dragged = true;
       }
       render();
     } else if (s.mode === 'select') {
-      const hit = hitTestElement(s.elements, fp.x, fp.y);
-      if (canvasRef.current) canvasRef.current.style.cursor = hit ? 'grab' : 'default';
+      if (s.placementType) {
+        if (canvasRef.current) canvasRef.current.style.cursor = 'crosshair';
+      } else {
+        const hit = hitTestElement(s.elements, fp.x, fp.y);
+        if (canvasRef.current) canvasRef.current.style.cursor = hit ? 'grab' : 'default';
+      }
     }
   };
 
@@ -259,30 +285,24 @@ export function FieldCanvas() {
       if (canvasRef.current) canvasRef.current.style.cursor = 'default';
     }
 
-    if (drawRef.current.start && drawRef.current.end && ['arrow', 'dashed', 'zone'].includes(s.mode)) {
-      s.saveUndo();
-      s.addDrawing({
-        type: s.mode as 'arrow' | 'dashed' | 'zone',
-        x1: drawRef.current.start.x,
-        y1: drawRef.current.start.y,
-        x2: drawRef.current.end.x,
-        y2: drawRef.current.end.y,
-        color: s.drawColor,
-        width: 2.5,
-      });
-      drawRef.current = { start: null, end: null, points: [] };
-    }
-
-    if (s.mode === 'curved' && drawRef.current.points.length >= 2) {
-      s.saveUndo();
-      s.addDrawing({
-        type: 'curved',
-        x1: 0, y1: 0, x2: 0, y2: 0,
-        points: [...drawRef.current.points],
-        color: s.drawColor,
-        width: 2.5,
-      });
-      drawRef.current = { start: null, end: null, points: [] };
+    if (drawRef.current.start && ['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      if (drawRef.current.dragged && drawRef.current.end) {
+        // Drag complete → finalize drawing
+        s.saveUndo();
+        s.addDrawing({
+          type: s.mode as 'arrow' | 'dashed' | 'curved' | 'zone',
+          x1: drawRef.current.start.x,
+          y1: drawRef.current.start.y,
+          x2: drawRef.current.end.x,
+          y2: drawRef.current.end.y,
+          color: s.drawColor,
+          width: 2.5,
+        });
+        drawRef.current = { start: null, end: null, points: [], dragged: false, clickPlaced: false };
+      } else if (!drawRef.current.clickPlaced) {
+        // Click without drag → keep start, wait for second click
+        drawRef.current.clickPlaced = true;
+      }
     }
   };
 
@@ -332,6 +352,121 @@ export function FieldCanvas() {
     }
   };
 
+  // === Touch handlers for mobile ===
+  const getTouchPos = (e: React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const touch = e.touches[0] || e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const pos = getTouchPos(e);
+    if (!pos) return;
+    const fp = canvasToField(pos.x, pos.y);
+    const s = useStore.getState();
+
+    if (!['arrow', 'dashed', 'zone', 'curved'].includes(s.mode)) {
+      drawRef.current = { start: null, end: null, points: [], dragged: false, clickPlaced: false };
+    }
+
+    if (s.mode === 'select') {
+      if (s.placementType) {
+        s.saveUndo();
+        const playerCount = s.elements.filter(el => el.type.startsWith('player')).length;
+        s.addElement({
+          type: s.placementType,
+          x: fp.x, y: fp.y,
+          color: s.selectedColor, rotation: 0,
+          number: s.placementType.startsWith('player') ? String(playerCount + 1) : '',
+          label: '', keyframes: [],
+          startTime: s.animTime, endTime: -1, scale: s.playerScale,
+        });
+        return;
+      }
+      const hit = hitTestElement(s.elements, fp.x, fp.y);
+      if (hit) {
+        s.setSelected(hit.id);
+        dragRef.current = { id: hit.id, offsetX: fp.x - hit.x, offsetY: fp.y - hit.y };
+      } else {
+        s.setSelected(null);
+      }
+    } else if (['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      if (drawRef.current.clickPlaced && drawRef.current.start) {
+        // Second touch after first tap → finalize handled in onTouchEnd
+        drawRef.current.end = fp;
+      } else {
+        drawRef.current = { start: fp, end: null, points: [], dragged: false, clickPlaced: false };
+      }
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const pos = getTouchPos(e);
+    if (!pos) return;
+    const fp = canvasToField(pos.x, pos.y);
+    const s = useStore.getState();
+
+    if (dragRef.current) {
+      s.updateElement(dragRef.current.id, {
+        x: fp.x - dragRef.current.offsetX,
+        y: fp.y - dragRef.current.offsetY,
+      });
+    } else if (drawRef.current.start && ['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      drawRef.current.end = fp;
+      drawRef.current.dragged = true;
+      render();
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const s = useStore.getState();
+
+    if (dragRef.current) {
+      s.saveUndo();
+      dragRef.current = null;
+    }
+
+    if (drawRef.current.start && ['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      if (drawRef.current.dragged && drawRef.current.end) {
+        // Drag complete → finalize drawing
+        s.saveUndo();
+        s.addDrawing({
+          type: s.mode as 'arrow' | 'dashed' | 'curved' | 'zone',
+          x1: drawRef.current.start.x, y1: drawRef.current.start.y,
+          x2: drawRef.current.end.x, y2: drawRef.current.end.y,
+          color: s.drawColor, width: 2.5,
+        });
+        drawRef.current = { start: null, end: null, points: [], dragged: false, clickPlaced: false };
+      } else if (drawRef.current.clickPlaced && drawRef.current.end) {
+        // Second tap → finalize
+        const touch = e.changedTouches[0];
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const rect = canvas.getBoundingClientRect();
+          const fp = canvasToField(touch.clientX - rect.left, touch.clientY - rect.top);
+          s.saveUndo();
+          s.addDrawing({
+            type: s.mode as 'arrow' | 'dashed' | 'curved' | 'zone',
+            x1: drawRef.current.start.x, y1: drawRef.current.start.y,
+            x2: fp.x, y2: fp.y,
+            color: s.drawColor, width: 2.5,
+          });
+        }
+        drawRef.current = { start: null, end: null, points: [], dragged: false, clickPlaced: false };
+      } else if (!drawRef.current.clickPlaced) {
+        // First tap without drag → wait for second tap
+        drawRef.current.clickPlaced = true;
+      }
+    }
+  };
+
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
@@ -361,6 +496,7 @@ export function FieldCanvas() {
       keyframes: [],
       startTime: s.animTime,
       endTime: -1,
+      scale: s.playerScale,
     });
   };
 
@@ -375,6 +511,10 @@ export function FieldCanvas() {
         onContextMenu={onContextMenu}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{ touchAction: 'none' }}
       />
       <ContextMenu />
     </div>

@@ -1,4 +1,6 @@
-import type { FieldElement, Drawing, FieldType } from '../types';
+import type { FieldElement, Drawing, FieldType, ElementType } from '../types';
+import type { PlayerPose } from './playerSvg';
+import { getPlayerImage } from './playerImageCache';
 
 const HIGHLIGHT = '#e94560';
 
@@ -13,6 +15,7 @@ interface RenderConfig {
   selectedId: number | null;
   animPlaying: boolean;
   playerStyle: 'circle' | 'figure';
+  playerScale: 1 | 2 | 3;
 }
 
 export function drawField(ctx: CanvasRenderingContext2D, cfg: RenderConfig) {
@@ -122,7 +125,81 @@ export function drawField(ctx: CanvasRenderingContext2D, cfg: RenderConfig) {
   }
 }
 
+// SVG rendering constants
+const SVG_W = 60;
+const SVG_H = 80;
+const SVG_ANCHOR_Y = 32; // torso center in SVG coordinates
+const SVG_RENDER_SCALE = 0.6; // relative to canvas scale
+const SCALE_FACTORS: Record<number, number> = { 1: 1.0, 2: 1.25, 3: 1.5 };
+
+function getPose(type: ElementType): PlayerPose {
+  switch (type) {
+    case 'player-run': return 'run';
+    case 'player-pass': return 'pass';
+    case 'goalkeeper': return 'goalkeeper';
+    case 'trainer': return 'trainer';
+    default: return 'stand';
+  }
+}
+
 function drawPlayerFigure(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number,
+  el: FieldElement, s: number, selected: boolean
+) {
+  const pose = getPose(el.type);
+  const color = el.color || '#3498db';
+  const img = getPlayerImage(pose, color);
+
+  if (img) {
+    const imgScale = SVG_RENDER_SCALE * s;
+    const imgW = SVG_W * imgScale;
+    const imgH = SVG_H * imgScale;
+    const drawX = x - imgW / 2;
+    const drawY = y - SVG_ANCHOR_Y * imgScale;
+
+    ctx.drawImage(img, drawX, drawY, imgW, imgH);
+
+    // Number on shirt (Canvas overlay)
+    const isGK = el.type === 'goalkeeper';
+    const isTrainer = el.type === 'trainer';
+    const numText = isGK ? (el.number || 'TW') : isTrainer ? 'TR' : (el.number || '');
+    if (numText) {
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${8 * s}px Segoe UI, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(numText, x, y);
+    }
+
+    // Label below
+    if (el.label) {
+      ctx.fillStyle = '#fff';
+      ctx.font = `${9 * s}px Segoe UI, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(el.label, x, y + 32 * s);
+    }
+
+    // Selection highlight
+    if (selected) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      const pad = 3 * s;
+      const top = drawY - pad;
+      const figureBottom = y + (72 - SVG_ANCHOR_Y) * imgScale;
+      const bot = figureBottom + pad;
+      const halfW = (isGK ? 28 : 22) * imgScale;
+      ctx.strokeRect(x - halfW - pad, top, (halfW + pad) * 2, bot - top);
+      ctx.setLineDash([]);
+    }
+  } else {
+    // Fallback: render with old polygon method while SVG loads
+    drawPlayerFigureFallback(ctx, x, y, el, s, selected);
+  }
+}
+
+function drawPlayerFigureFallback(
   ctx: CanvasRenderingContext2D,
   x: number, y: number,
   el: FieldElement, s: number, selected: boolean
@@ -130,7 +207,7 @@ function drawPlayerFigure(
   const color = el.color || '#3498db';
   const isTrainer = el.type === 'trainer';
   const isGK = el.type === 'goalkeeper';
-  const shirtColor = isTrainer ? '#2c3e50' : color;
+  const shirtColor = color;
   const shortsColor = isTrainer ? '#1a252f' : '#fff';
   const headR = 6 * s;
   const bodyH = 16 * s;
@@ -180,7 +257,6 @@ function drawPlayerFigure(
   ctx.lineCap = 'round';
 
   if (el.type === 'player-run') {
-    // Running pose: legs spread
     ctx.beginPath();
     ctx.moveTo(x - 2 * s, y + bodyH / 4 + 6 * s);
     ctx.lineTo(x - 6 * s, y + bodyH / 4 + 6 * s + legH);
@@ -190,7 +266,6 @@ function drawPlayerFigure(
     ctx.lineTo(x + 6 * s, y + bodyH / 4 + 6 * s + legH);
     ctx.stroke();
   } else if (el.type === 'player-pass') {
-    // Kicking pose: one leg forward
     ctx.beginPath();
     ctx.moveTo(x - 2 * s, y + bodyH / 4 + 6 * s);
     ctx.lineTo(x - 3 * s, y + bodyH / 4 + 6 * s + legH);
@@ -200,7 +275,6 @@ function drawPlayerFigure(
     ctx.lineTo(x + 10 * s, y + bodyH / 4 + 2 * s + legH);
     ctx.stroke();
   } else {
-    // Standing
     ctx.beginPath();
     ctx.moveTo(x - 2 * s, y + bodyH / 4 + 6 * s);
     ctx.lineTo(x - 3 * s, y + bodyH / 4 + 6 * s + legH);
@@ -216,7 +290,6 @@ function drawPlayerFigure(
   ctx.lineWidth = 2.5 * s;
 
   if (isGK) {
-    // GK: arms wide
     ctx.beginPath();
     ctx.moveTo(x - bodyW / 2, y - bodyH / 4);
     ctx.lineTo(x - bodyW / 2 - armL, y - bodyH / 2 - 2 * s);
@@ -225,7 +298,6 @@ function drawPlayerFigure(
     ctx.moveTo(x + bodyW / 2, y - bodyH / 4);
     ctx.lineTo(x + bodyW / 2 + armL, y - bodyH / 2 - 2 * s);
     ctx.stroke();
-    // Gloves
     ctx.fillStyle = shirtColor;
     ctx.beginPath();
     ctx.arc(x - bodyW / 2 - armL, y - bodyH / 2 - 2 * s, 3 * s, 0, Math.PI * 2);
@@ -234,7 +306,6 @@ function drawPlayerFigure(
     ctx.arc(x + bodyW / 2 + armL, y - bodyH / 2 - 2 * s, 3 * s, 0, Math.PI * 2);
     ctx.fill();
   } else if (el.type === 'player-run') {
-    // Running arms
     ctx.beginPath();
     ctx.moveTo(x - bodyW / 2, y - bodyH / 4);
     ctx.lineTo(x - bodyW / 2 - armL * 0.6, y + 2 * s);
@@ -244,7 +315,6 @@ function drawPlayerFigure(
     ctx.lineTo(x + bodyW / 2 + armL * 0.6, y - bodyH / 2);
     ctx.stroke();
   } else {
-    // Relaxed arms
     ctx.beginPath();
     ctx.moveTo(x - bodyW / 2, y - bodyH / 4);
     ctx.lineTo(x - bodyW / 2 - armL * 0.3, y + 4 * s);
@@ -292,6 +362,7 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
   const x = offsetX + el.x * s;
   const y = offsetY + el.y * s;
   const selected = el.id === selectedId;
+  const ps = s * (SCALE_FACTORS[el.scale ?? cfg.playerScale] ?? 1);
 
   ctx.save();
   if (el.rotation) {
@@ -305,9 +376,9 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
     case 'player-stand':
     case 'player-pass': {
       if (cfg.playerStyle === 'figure') {
-        drawPlayerFigure(ctx, x, y, el, s, selected);
+        drawPlayerFigure(ctx, x, y, el, ps, selected);
       } else {
-        const r = 16 * s;
+        const r = 16 * ps;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = el.color;
@@ -316,13 +387,13 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
         ctx.lineWidth = selected ? 3 : 2;
         ctx.stroke();
         ctx.fillStyle = '#fff';
-        ctx.font = `bold ${12 * s}px Segoe UI, sans-serif`;
+        ctx.font = `bold ${12 * ps}px Segoe UI, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(el.number || '', x, y);
         if (el.label) {
-          ctx.font = `${9 * s}px Segoe UI, sans-serif`;
-          ctx.fillText(el.label, x, y + r + 10 * s);
+          ctx.font = `${9 * ps}px Segoe UI, sans-serif`;
+          ctx.fillText(el.label, x, y + r + 10 * ps);
         }
         if (el.type === 'player-run') {
           ctx.beginPath();
@@ -337,9 +408,9 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
     }
     case 'goalkeeper': {
       if (cfg.playerStyle === 'figure') {
-        drawPlayerFigure(ctx, x, y, el, s, selected);
+        drawPlayerFigure(ctx, x, y, el, ps, selected);
       } else {
-        const r = 16 * s;
+        const r = 16 * ps;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = el.color || '#f39c12';
@@ -348,7 +419,7 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
         ctx.lineWidth = selected ? 3 : 2;
         ctx.stroke();
         ctx.fillStyle = '#fff';
-        ctx.font = `bold ${11 * s}px Segoe UI, sans-serif`;
+        ctx.font = `bold ${11 * ps}px Segoe UI, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('TW', x, y);
@@ -357,18 +428,18 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
     }
     case 'trainer': {
       if (cfg.playerStyle === 'figure') {
-        drawPlayerFigure(ctx, x, y, el, s, selected);
+        drawPlayerFigure(ctx, x, y, el, ps, selected);
       } else {
-        const r = 16 * s;
+        const r = 16 * ps;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = '#2c3e50';
+        ctx.fillStyle = el.color || '#2c3e50';
         ctx.fill();
         ctx.strokeStyle = selected ? '#fff' : 'rgba(255,255,255,.3)';
         ctx.lineWidth = selected ? 3 : 2;
         ctx.stroke();
         ctx.fillStyle = '#fff';
-        ctx.font = `bold ${10 * s}px Segoe UI, sans-serif`;
+        ctx.font = `bold ${10 * ps}px Segoe UI, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('TR', x, y);
@@ -642,72 +713,47 @@ export function drawDrawing(ctx: CanvasRenderingContext2D, d: Drawing, cfg: Rend
       break;
     }
     case 'curved': {
-      if (d.points && d.points.length >= 2) {
-        // Build cumulative distances along the path
-        const pts = d.points;
-        const dists = [0];
-        for (let i = 1; i < pts.length; i++) {
-          const pdx = pts[i].x - pts[i - 1].x, pdy = pts[i].y - pts[i - 1].y;
-          dists.push(dists[i - 1] + Math.sqrt(pdx * pdx + pdy * pdy));
-        }
-        const totalLen = dists[dists.length - 1];
-        if (totalLen < 1) break;
+      const dx = d.x2 - d.x1, dy = d.y2 - d.y1;
+      const totalLen = Math.sqrt(dx * dx + dy * dy);
+      if (totalLen < 1) break;
 
-        // Sample point + normal at distance along path
-        const sampleAt = (dist: number) => {
-          let seg = 0;
-          while (seg < dists.length - 2 && dists[seg + 1] < dist) seg++;
-          const segLen = dists[seg + 1] - dists[seg];
-          const t = segLen > 0 ? (dist - dists[seg]) / segLen : 0;
-          const px = pts[seg].x + (pts[seg + 1].x - pts[seg].x) * t;
-          const py = pts[seg].y + (pts[seg + 1].y - pts[seg].y) * t;
-          const tdx = pts[seg + 1].x - pts[seg].x;
-          const tdy = pts[seg + 1].y - pts[seg].y;
-          const len = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
-          return { x: px, y: py, nx: -tdy / len, ny: tdx / len };
-        };
+      // Direction and normal of the straight line
+      const a = Math.atan2(dy, dx);
+      const nx = -Math.sin(a), ny = Math.cos(a);
 
-        // Draw wavy line, fading wave out near the end for clean arrowhead
-        const waveAmp = 6;
-        const waveFreq = 0.35;
-        const hl = 14 * s;
-        const fadeStart = Math.max(0, totalLen - 25); // fade wave in last 25px
-        const waveEnd = Math.max(0, totalLen - 12); // stop wave before arrow tip
-        const steps = Math.max(60, Math.ceil(totalLen / 2));
+      // Draw wavy line along the straight path from (x1,y1) to (x2,y2)
+      const waveAmp = 6;
+      const waveFreq = 0.35;
+      const hl = 14 * s;
+      const fadeStart = Math.max(0, totalLen - 25);
+      const waveEnd = Math.max(0, totalLen - 12);
+      const steps = Math.max(60, Math.ceil(totalLen / 2));
 
-        // Direction at the end (use point ~20% back for stability)
-        const lookbackDist = Math.max(totalLen * 0.2, 30);
-        const pEnd = sampleAt(totalLen);
-        const pBack = sampleAt(Math.max(0, totalLen - lookbackDist));
-        const a = Math.atan2(pEnd.y - pBack.y, pEnd.x - pBack.x);
+      const tipX = ox + d.x2 * s;
+      const tipY = oy + d.y2 * s;
 
-        // Arrow tip is at the path endpoint
-        const tipX = ox + pEnd.x * s;
-        const tipY = oy + pEnd.y * s;
-
-        ctx.beginPath();
-        for (let i = 0; i <= steps; i++) {
-          const dist = (i / steps) * waveEnd;
-          const p = sampleAt(dist);
-          // Fade wave amplitude to 0 near the end
-          const fade = dist > fadeStart ? 1 - (dist - fadeStart) / (waveEnd - fadeStart) : 1;
-          const wave = Math.sin(dist * waveFreq) * waveAmp * fade;
-          const sx = ox + (p.x + p.nx * wave) * s;
-          const sy = oy + (p.y + p.ny * wave) * s;
-          if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
-        }
-        // Straight line into arrow tip
-        ctx.lineTo(tipX, tipY);
-        ctx.stroke();
-
-        // Arrowhead pointing outward
-        ctx.beginPath();
-        ctx.moveTo(tipX, tipY);
-        ctx.lineTo(tipX - hl * Math.cos(a - 0.45), tipY - hl * Math.sin(a - 0.45));
-        ctx.lineTo(tipX - hl * Math.cos(a + 0.45), tipY - hl * Math.sin(a + 0.45));
-        ctx.closePath();
-        ctx.fill();
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const dist = (i / steps) * waveEnd;
+        const t = dist / totalLen;
+        const px = d.x1 + dx * t;
+        const py = d.y1 + dy * t;
+        const fade = dist > fadeStart ? 1 - (dist - fadeStart) / (waveEnd - fadeStart) : 1;
+        const wave = Math.sin(dist * waveFreq) * waveAmp * fade;
+        const sx = ox + (px + nx * wave) * s;
+        const sy = oy + (py + ny * wave) * s;
+        if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
       }
+      ctx.lineTo(tipX, tipY);
+      ctx.stroke();
+
+      // Arrowhead
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - hl * Math.cos(a - 0.45), tipY - hl * Math.sin(a - 0.45));
+      ctx.lineTo(tipX - hl * Math.cos(a + 0.45), tipY - hl * Math.sin(a + 0.45));
+      ctx.closePath();
+      ctx.fill();
       break;
     }
     case 'zone': {
@@ -733,15 +779,8 @@ export function drawDrawing(ctx: CanvasRenderingContext2D, d: Drawing, cfg: Rend
 
   // Draw label (number) on arrow/dashed/curved
   if (d.label && (d.type === 'arrow' || d.type === 'dashed' || d.type === 'curved')) {
-    let lx: number, ly: number;
-    if (d.type === 'curved' && d.points && d.points.length >= 2) {
-      const mid = d.points[Math.floor(d.points.length / 2)];
-      lx = ox + mid.x * s;
-      ly = oy + mid.y * s;
-    } else {
-      lx = ox + ((d.x1 + d.x2) / 2) * s;
-      ly = oy + ((d.y1 + d.y2) / 2) * s;
-    }
+    const lx = ox + ((d.x1 + d.x2) / 2) * s;
+    const ly = oy + ((d.y1 + d.y2) / 2) * s;
     const r = 12 * s;
     ctx.beginPath();
     ctx.arc(lx, ly, r, 0, Math.PI * 2);
@@ -773,12 +812,8 @@ export function hitTestDrawing(drawings: Drawing[], fx: number, fy: number): Dra
   const threshold = 15;
   for (let i = drawings.length - 1; i >= 0; i--) {
     const d = drawings[i];
-    if (d.type === 'arrow' || d.type === 'dashed') {
+    if (d.type === 'arrow' || d.type === 'dashed' || d.type === 'curved') {
       if (pointToSegmentDist(fx, fy, d.x1, d.y1, d.x2, d.y2) < threshold) return d;
-    } else if (d.type === 'curved' && d.points && d.points.length >= 2) {
-      for (let j = 0; j < d.points.length - 1; j++) {
-        if (pointToSegmentDist(fx, fy, d.points[j].x, d.points[j].y, d.points[j + 1].x, d.points[j + 1].y) < threshold) return d;
-      }
     }
   }
   return null;

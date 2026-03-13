@@ -6,7 +6,7 @@ import type { ElementType } from '../types';
 export function ConceptPanel() {
   const [tab, setTab] = useState<'concept' | 'properties'>('concept');
   const store = useStore();
-  const { concept, updateConcept, addPhase, updatePhase, removePhase, addCoachingPoint, updateCoachingPoint, addVariation, updateVariation, elements, selectedId } = store;
+  const { concept, updateConcept, addPhase, updatePhase, removePhase, addCoachingPoint, updateCoachingPoint, addVariation, updateVariation, elements, selectedId, mobileDrawer, showConcept } = store;
 
   const selectedEl = elements.find(e => e.id === selectedId);
 
@@ -20,7 +20,7 @@ export function ConceptPanel() {
   });
 
   return (
-    <div className="concept-panel">
+    <div className={`concept-panel ${mobileDrawer === 'concept' ? 'open' : ''} ${!showConcept ? 'hidden-desktop' : ''}`}>
       <div className="tab-bar">
         <button className={`tab-btn ${tab === 'concept' ? 'active' : ''}`} onClick={() => setTab('concept')}>
           Konzeption
@@ -143,7 +143,7 @@ export function ConceptPanel() {
               <div style={{ marginBottom: 10, fontWeight: 600, color: 'var(--highlight)' }}>
                 {ELEMENT_TYPE_NAMES[selectedEl.type]}
               </div>
-              {(selectedEl.type.startsWith('player') || selectedEl.type === 'goalkeeper') && (
+              {(selectedEl.type.startsWith('player') || selectedEl.type === 'goalkeeper' || selectedEl.type === 'trainer') && (
                 <>
                   <div className="prop-row">
                     <label>Nummer</label>
@@ -156,9 +156,33 @@ export function ConceptPanel() {
                       onChange={e => store.updateElement(selectedEl.id, { label: e.target.value })}
                       placeholder="z.B. LV" />
                   </div>
+                  <div className="prop-row">
+                    <label>Farbe</label>
+                    <div className="color-row">
+                      {TEAM_COLORS.map(c => (
+                        <div key={c.value}
+                          className={`color-swatch${selectedEl.color === c.value ? ' active' : ''}`}
+                          style={{ background: c.value }}
+                          title={c.name}
+                          onClick={() => store.updateElement(selectedEl.id, { color: c.value })} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="prop-row">
+                    <label>Größe</label>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {([1, 2, 3] as const).map(lvl => (
+                        <button key={lvl}
+                          className={`topbar-btn${(selectedEl.scale ?? 1) === lvl ? ' active' : ''}`}
+                          style={{ padding: '3px 10px', fontSize: 12 }}
+                          onClick={() => store.updateElement(selectedEl.id, { scale: lvl })}
+                        >{lvl === 1 ? 'S' : lvl === 2 ? 'M' : 'L'}</button>
+                      ))}
+                    </div>
+                  </div>
                 </>
               )}
-              {['player-home', 'player-away', 'player-neutral', 'goalkeeper', 'cone', 'flag', 'ring'].includes(selectedEl.type) && (
+              {['cone', 'flag', 'ring'].includes(selectedEl.type) && (
                 <div className="prop-row">
                   <label>Farbe</label>
                   <div className="color-row">

@@ -29,6 +29,7 @@ export interface FieldElement {
   keyframes: Keyframe[];
   startTime: number;
   endTime: number;
+  scale?: 1 | 2 | 3;
 }
 
 export interface Drawing {

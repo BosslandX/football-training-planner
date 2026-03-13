@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { TEAM_COLORS, DRAW_COLORS } from '../types';
 import type { ElementType, ToolMode } from '../types';
+import { getPlayerSvg, type PlayerPose } from '../utils/playerSvg';
+
+const POSE_MAP: Partial<Record<ElementType, PlayerPose>> = {
+  'player-run': 'run',
+  'player-stand': 'stand',
+  'player-pass': 'pass',
+  'goalkeeper': 'goalkeeper',
+  'trainer': 'trainer',
+};
 
 interface ToolDef {
   type: ElementType;
@@ -34,6 +43,7 @@ const GOAL_TOOLS: ToolDef[] = [
 ];
 
 const DRAW_TOOLS: { mode: ToolMode; label: string }[] = [
+  { mode: 'select', label: '⊹ Auswahl' },
   { mode: 'arrow', label: '→ Schuss/Pass' },
   { mode: 'dashed', label: '┅ Laufweg' },
   { mode: 'curved', label: '↝ Dribbling' },
@@ -53,31 +63,56 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
   );
 }
 
+function PlayerIcon({ type, color }: { type: ElementType; color: string }) {
+  const pose = POSE_MAP[type];
+  const svgUrl = useMemo(() => {
+    if (!pose) return null;
+    const svg = getPlayerSvg(pose, color);
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }, [pose, color, type]);
+
+  if (!svgUrl) return null;
+  return <img src={svgUrl} alt="" style={{ width: 24, height: 32 }} draggable={false} />;
+}
+
 function ToolGrid({ tools }: { tools: ToolDef[] }) {
+  const { placementType, setPlacementType, selectedColor } = useStore();
+
   return (
     <div className="tool-grid">
-      {tools.map(t => (
-        <div
-          key={t.type}
-          className="tool-item"
-          draggable
-          onDragStart={e => e.dataTransfer.setData('elementType', t.type)}
-        >
-          <div className="icon">{t.icon}</div>
-          {t.label}
-        </div>
-      ))}
+      {tools.map(t => {
+        const hasSvg = !!POSE_MAP[t.type];
+        const isActive = placementType === t.type;
+
+        return (
+          <div
+            key={t.type}
+            className={`tool-item${isActive ? ' active' : ''}`}
+            draggable
+            onDragStart={e => {
+              e.dataTransfer.setData('elementType', t.type);
+              setPlacementType(null);
+            }}
+            onClick={() => setPlacementType(isActive ? null : t.type)}
+          >
+            <div className="icon">
+              {hasSvg ? <PlayerIcon type={t.type} color={selectedColor} /> : t.icon}
+            </div>
+            {t.label}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 export function Sidebar() {
-  const { selectedColor, setSelectedColor, drawColor, setDrawColor, mode, setMode, selectedId, elements, addKeyframe, clearKeyframes, animTime } = useStore();
+  const { selectedColor, setSelectedColor, drawColor, setDrawColor, mode, setMode, selectedId, elements, addKeyframe, clearKeyframes, animTime, mobileDrawer } = useStore();
 
   const selectedEl = elements.find(e => e.id === selectedId);
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${mobileDrawer === 'sidebar' ? 'open' : ''}`}>
       <Section title="Teamfarbe">
         <div className="color-row">
           {TEAM_COLORS.map(c => (
@@ -88,7 +123,7 @@ export function Sidebar() {
               title={c.name}
               onClick={() => {
                 setSelectedColor(c.value);
-                if (selectedEl && (selectedEl.type.startsWith('player') || selectedEl.type === 'goalkeeper')) {
+                if (selectedEl && (selectedEl.type.startsWith('player') || selectedEl.type === 'goalkeeper' || selectedEl.type === 'trainer')) {
                   useStore.getState().updateElement(selectedEl.id, { color: c.value });
                 }
               }}

@@ -195,6 +195,60 @@ function activityToParseResult(db: Database.Database, act: ActivityRow): ParseRe
   return { concept, materialCounts, playerCount, hasLargeGoals };
 }
 
+interface DrillRow {
+  id: number;
+  name_de: string | null;
+  name_en: string | null;
+  description_de: string | null;
+  description_en: string | null;
+  player_count_min: number | null;
+  player_count_max: number | null;
+  field_length_m: number | null;
+  field_width_m: number | null;
+  format: string | null;
+  difficulty: string | null;
+  session_phase: string | null;
+}
+
+export function loadDrillAsExercise(drillId: number): {
+  drill: DrillRow;
+  exercise: ParseResult;
+} | null {
+  const db = openDb();
+  try {
+    const drill = db.prepare(`
+      SELECT id, name_de, name_en, description_de, description_en,
+             player_count_min, player_count_max,
+             field_length_m, field_width_m, format, difficulty, session_phase
+      FROM drills WHERE id = ?
+    `).get(drillId) as DrillRow | undefined;
+
+    if (!drill) return null;
+
+    const act: ActivityRow = {
+      activity_order: 1,
+      phase_type: drill.session_phase || 'expanded',
+      duration_min: 15,
+      drill_id: drill.id,
+      name_de: drill.name_de,
+      name_en: drill.name_en,
+      description_de: drill.description_de,
+      description_en: drill.description_en,
+      player_count_min: drill.player_count_min,
+      player_count_max: drill.player_count_max,
+      field_length_m: drill.field_length_m,
+      field_width_m: drill.field_width_m,
+      format: drill.format,
+      difficulty: drill.difficulty,
+    };
+
+    const exercise = activityToParseResult(db, act);
+    return { drill, exercise };
+  } finally {
+    db.close();
+  }
+}
+
 function estimatePlayerCount(act: ActivityRow): number {
   // Try to extract from format (e.g., "4v4" -> 8, "3v3+3" -> 9)
   if (act.format) {

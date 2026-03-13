@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { FieldElement, Drawing, ConceptData, ToolMode, FieldType, Keyframe, ImportResult, Exercise } from '../types';
+import type { FieldElement, Drawing, ConceptData, ToolMode, FieldType, ElementType, Keyframe, ImportResult, Exercise } from '../types';
 
 interface HistoryEntry {
   elements: FieldElement[];
@@ -17,11 +17,13 @@ interface AppState {
   selectedColor: string;
   drawColor: string;
   mode: ToolMode;
+  placementType: ElementType | null;
 
   // Field
   fieldType: FieldType;
   showGrid: boolean;
   playerStyle: 'circle' | 'figure';
+  playerScale: 1 | 2 | 3;
   zoom: number;
 
   // Animation
@@ -33,6 +35,9 @@ interface AppState {
   // Concept
   concept: ConceptData;
   showConcept: boolean;
+
+  // Mobile
+  mobileDrawer: 'sidebar' | 'concept' | null;
 
   // Exercises (multi-exercise support)
   exercises: Exercise[];
@@ -53,9 +58,11 @@ interface AppState {
   setSelectedColor: (color: string) => void;
   setDrawColor: (color: string) => void;
   setMode: (mode: ToolMode) => void;
+  setPlacementType: (type: ElementType | null) => void;
   setFieldType: (type: FieldType) => void;
   toggleGrid: () => void;
   togglePlayerStyle: () => void;
+  setPlayerScale: (level: 1 | 2 | 3) => void;
   setZoom: (z: number) => void;
   addDrawing: (d: Omit<Drawing, 'id'>) => void;
   removeDrawing: (id: number) => void;
@@ -86,6 +93,9 @@ interface AppState {
   saveUndo: () => void;
   undo: () => void;
   redo: () => void;
+
+  // Mobile
+  setMobileDrawer: (d: 'sidebar' | 'concept' | null) => void;
 
   // Reset
   resetAll: () => void;
@@ -120,9 +130,11 @@ export const useStore = create<AppState>((set, get) => ({
   selectedColor: '#3498db',
   drawColor: '#ffffff',
   mode: 'select',
+  placementType: null,
   fieldType: 'full-green',
   showGrid: false,
-  playerStyle: 'circle',
+  playerStyle: 'figure',
+  playerScale: 1 as 1 | 2 | 3,
   zoom: 1,
   animTime: 0,
   animDuration: 5,
@@ -130,6 +142,7 @@ export const useStore = create<AppState>((set, get) => ({
   animPlaying: false,
   concept: { ...defaultConcept },
   showConcept: true,
+  mobileDrawer: null,
   exercises: [],
   currentExerciseIndex: 0,
   undoStack: [],
@@ -181,10 +194,12 @@ export const useStore = create<AppState>((set, get) => ({
   setSelected: (id) => set({ selectedId: id }),
   setSelectedColor: (color) => set({ selectedColor: color }),
   setDrawColor: (color) => set({ drawColor: color }),
-  setMode: (mode) => set({ mode }),
+  setMode: (mode) => set({ mode, placementType: null }),
+  setPlacementType: (type) => set({ placementType: type, mode: 'select' }),
   setFieldType: (type) => set({ fieldType: type }),
   toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
   togglePlayerStyle: () => set(s => ({ playerStyle: s.playerStyle === 'circle' ? 'figure' : 'circle' })),
+  setPlayerScale: (level) => set({ playerScale: level }),
   setZoom: (z) => set({ zoom: Math.max(0.5, Math.min(2.0, z)) }),
 
   addDrawing: (d) => {
@@ -265,6 +280,7 @@ export const useStore = create<AppState>((set, get) => ({
     concept: { ...s.concept, ...updates },
   })),
   toggleConcept: () => set(s => ({ showConcept: !s.showConcept })),
+  setMobileDrawer: (d) => set({ mobileDrawer: d }),
 
   addPhase: () => set(s => ({
     concept: {

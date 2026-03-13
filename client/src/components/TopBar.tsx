@@ -1,15 +1,30 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { SessionBrowser } from './SessionBrowser';
 import type { ToolMode, FieldType } from '../types';
 
 const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
 
 export function TopBar() {
-  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, zoom, setZoom } = useStore();
+  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showSessionBrowser, setShowSessionBrowser] = useState(false);
+  const overflowRef = useRef<HTMLDivElement>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+
+  // Close overflow when drawer state changes
+  useEffect(() => { setOverflowOpen(false); }, [mobileDrawer]);
+
+  // Close overflow on outside click
+  useEffect(() => {
+    if (!overflowOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (!overflowRef.current?.contains(e.target as Node)) {
+        setOverflowOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [overflowOpen]);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -162,37 +177,46 @@ export function TopBar() {
 
   return (
     <div className="topbar">
+      {/* Mobile: hamburger button */}
+      <button
+        className="topbar-btn mobile-only"
+        onClick={() => setMobileDrawer(mobileDrawer === 'sidebar' ? null : 'sidebar')}
+        title="Sidebar"
+      >☰</button>
+
       <h1>⚽ Trainingsplaner</h1>
-      <div className="topbar-divider" />
-      <div className="topbar-group">
+      <div className="topbar-divider desktop-only" />
+      <div className="topbar-group desktop-only">
         <button className="topbar-btn" onClick={undo} title="Rückgängig (Ctrl+Z)">↩</button>
         <button className="topbar-btn" onClick={redo} title="Wiederholen (Ctrl+Y)">↪</button>
       </div>
-      <div className="topbar-divider" />
-      <div className="topbar-group">
+      <div className="topbar-divider desktop-only" />
+      <div className="topbar-group desktop-only">
         {modeBtn('select', '🖱️ Auswahl')}
         {modeBtn('arrow', '→ Schuss/Pass')}
         {modeBtn('dashed', '┅ Laufweg')}
         {modeBtn('curved', '↝ Dribbling')}
         {modeBtn('zone', '▭ Zone')}
       </div>
-      <div className="topbar-divider" />
-      <div className="topbar-group">
+      <div className="topbar-divider desktop-only" />
+      <div className="topbar-group desktop-only">
         <button className="topbar-btn" onClick={cycleField}>🏟️ Spielfeld</button>
         <button className={`topbar-btn ${showGrid ? 'active' : ''}`} onClick={toggleGrid}>⊞ Raster</button>
         <button className={`topbar-btn ${playerStyle === 'figure' ? 'active' : ''}`} onClick={togglePlayerStyle}>
           {playerStyle === 'figure' ? '👤 Figuren' : '⚪ Kreise'}
         </button>
+        <button className={`topbar-btn ${playerScale === 1 ? 'active' : ''}`} onClick={() => setPlayerScale(1)} title="Spieler 100%">S</button>
+        <button className={`topbar-btn ${playerScale === 2 ? 'active' : ''}`} onClick={() => setPlayerScale(2)} title="Spieler 125%">M</button>
+        <button className={`topbar-btn ${playerScale === 3 ? 'active' : ''}`} onClick={() => setPlayerScale(3)} title="Spieler 150%">L</button>
       </div>
-      <div className="topbar-divider" />
-      <div className="topbar-group">
+      <div className="topbar-divider desktop-only" />
+      <div className="topbar-group desktop-only">
         <button className="topbar-btn" onClick={() => setZoom(zoom - 0.25)} disabled={zoom <= 0.5}>-</button>
         <span className="zoom-label">{Math.round(zoom * 100)}%</span>
         <button className="topbar-btn" onClick={() => setZoom(zoom + 0.25)} disabled={zoom >= 2.0}>+</button>
       </div>
-      <div className="topbar-spacer" />
-      <div className="topbar-group">
-        <button className="topbar-btn" onClick={() => setShowSessionBrowser(true)}>📂 Sessions</button>
+      <div className="topbar-spacer desktop-only" />
+      <div className="topbar-group desktop-only">
         <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={toggleConcept}>📋 Konzeption</button>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>
@@ -200,7 +224,43 @@ export function TopBar() {
         <button className="topbar-btn" onClick={handleExportVideo}>🎥 Video</button>
         <button className="topbar-btn" onClick={handleReset}>🗑️ Reset</button>
       </div>
-      {showSessionBrowser && <SessionBrowser onClose={() => setShowSessionBrowser(false)} />}
+
+      {/* Mobile: spacer + concept + overflow */}
+      <div className="topbar-spacer mobile-only" />
+      <button
+        className={`topbar-btn mobile-only ${mobileDrawer === 'concept' ? 'active' : ''}`}
+        onClick={() => setMobileDrawer(mobileDrawer === 'concept' ? null : 'concept')}
+        title="Konzeption"
+      >📋</button>
+
+      <div className="mobile-overflow-wrapper mobile-only" ref={overflowRef}>
+        <button
+          className="topbar-btn"
+          onClick={() => setOverflowOpen(!overflowOpen)}
+          title="Mehr"
+        >⋮</button>
+        {overflowOpen && (
+          <div className="mobile-overflow-menu" onClick={() => setOverflowOpen(false)}>
+            <button onClick={undo}>↩ Rückgängig</button>
+            <button onClick={redo}>↪ Wiederholen</button>
+            <div className="overflow-separator" />
+            <button onClick={cycleField}>🏟️ Spielfeld</button>
+            <button onClick={toggleGrid}>{showGrid ? '⊞ Raster aus' : '⊞ Raster an'}</button>
+            <button onClick={togglePlayerStyle}>{playerStyle === 'figure' ? '⚪ Kreise' : '👤 Figuren'}</button>
+            <div className="overflow-separator" />
+            <button onClick={() => setZoom(zoom - 0.25)} disabled={zoom <= 0.5}>- Zoom</button>
+            <span className="overflow-zoom">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom(zoom + 0.25)} disabled={zoom >= 2.0}>+ Zoom</button>
+            <div className="overflow-separator" />
+            <button onClick={handleExport}>🖼️ PNG</button>
+            <button onClick={handleExportPDF}>📄 PDF</button>
+            <button onClick={handleExportGIF}>🎬 GIF</button>
+            <button onClick={handleExportVideo}>🎥 Video</button>
+            <div className="overflow-separator" />
+            <button onClick={handleReset}>🗑️ Reset</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
