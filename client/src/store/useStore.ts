@@ -39,6 +39,7 @@ interface AppState {
   // Mobile
   mobileDrawer: 'sidebar' | 'concept' | null;
   conceptTab: 'concept' | 'properties';
+  mobileRecording: { elementId: number; startX: number; startY: number; startRotation: number } | null;
 
   // Exercises (multi-exercise support)
   exercises: Exercise[];
@@ -98,6 +99,7 @@ interface AppState {
   // Mobile
   setMobileDrawer: (d: 'sidebar' | 'concept' | null) => void;
   setConceptTab: (t: 'concept' | 'properties') => void;
+  setMobileRecording: (r: { elementId: number; startX: number; startY: number; startRotation: number } | null) => void;
 
   // Reset
   resetAll: () => void;
@@ -146,6 +148,7 @@ export const useStore = create<AppState>((set, get) => ({
   showConcept: true,
   mobileDrawer: null,
   conceptTab: 'concept',
+  mobileRecording: null,
   exercises: [],
   currentExerciseIndex: 0,
   undoStack: [],
@@ -285,6 +288,7 @@ export const useStore = create<AppState>((set, get) => ({
   toggleConcept: () => set(s => ({ showConcept: !s.showConcept })),
   setMobileDrawer: (d) => set({ mobileDrawer: d }),
   setConceptTab: (t) => set({ conceptTab: t }),
+  setMobileRecording: (r) => set({ mobileRecording: r }),
 
   addPhase: () => set(s => ({
     concept: {

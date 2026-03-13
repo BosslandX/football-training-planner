@@ -632,6 +632,10 @@ textarea.phase-input { resize: vertical; min-height: 40px; }
   .selection-btn:hover, .selection-btn:active { background: var(--highlight); }
   .selection-btn.danger { background: #7f1d1d; border-color: #991b1b; }
   .selection-btn.danger:hover, .selection-btn.danger:active { background: #991b1b; }
+  .selection-btn.confirm { background: #166534; border-color: #16a34a; }
+  .selection-btn.confirm:hover, .selection-btn.confirm:active { background: #16a34a; }
+  .mobile-selection-bar.recording { border-top-color: #16a34a; }
+  .mobile-selection-bar.recording .selection-info { color: #4ade80; }
   .selection-btn span:first-child { font-size: 16px; }
 
   /* Mobile zoom controls (floating) */

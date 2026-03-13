@@ -13,6 +13,8 @@ const TOOLS: { mode: ToolMode; icon: string; label: string }[] = [
 export function MobileNav() {
   const mode = useStore(s => s.mode);
   const setMode = useStore(s => s.setMode);
+  const placementType = useStore(s => s.placementType);
+  const setPlacementType = useStore(s => s.setPlacementType);
   const mobileDrawer = useStore(s => s.mobileDrawer);
   const setMobileDrawer = useStore(s => s.setMobileDrawer);
   const selectedId = useStore(s => s.selectedId);
@@ -20,6 +22,8 @@ export function MobileNav() {
   const zoom = useStore(s => s.zoom);
   const setZoom = useStore(s => s.setZoom);
   const setConceptTab = useStore(s => s.setConceptTab);
+  const mobileRecording = useStore(s => s.mobileRecording);
+  const setMobileRecording = useStore(s => s.setMobileRecording);
 
   const selectedEl = elements.find(e => e.id === selectedId);
 
@@ -40,20 +44,77 @@ export function MobileNav() {
     useStore.getState().duplicateElement(selectedId);
   };
 
-  const handleKeyframe = () => {
-    if (!selectedId) return;
+  // Start recording: save current position as "A"
+  const handleStartMovement = () => {
+    if (!selectedEl) return;
+    setMobileRecording({
+      elementId: selectedEl.id,
+      startX: selectedEl.x,
+      startY: selectedEl.y,
+      startRotation: selectedEl.rotation,
+    });
+  };
+
+  // Finish recording: create keyframe at t=0 (pos A) and t=duration (pos B)
+  const handleFinishMovement = () => {
+    if (!mobileRecording) return;
     const s = useStore.getState();
-    const el = s.elements.find(e => e.id === selectedId);
-    if (el) {
-      s.saveUndo();
-      s.addKeyframe(selectedId, { t: s.animTime, x: el.x, y: el.y, rotation: el.rotation });
-    }
+    const el = s.elements.find(e => e.id === mobileRecording.elementId);
+    if (!el) { setMobileRecording(null); return; }
+
+    s.saveUndo();
+    // Clear existing keyframes first
+    s.clearKeyframes(el.id);
+    // Keyframe A: start position at t=0
+    s.addKeyframe(el.id, {
+      t: 0,
+      x: mobileRecording.startX,
+      y: mobileRecording.startY,
+      rotation: mobileRecording.startRotation,
+    });
+    // Keyframe B: current position at t=duration
+    s.addKeyframe(el.id, {
+      t: s.animDuration,
+      x: el.x,
+      y: el.y,
+      rotation: el.rotation,
+    });
+    setMobileRecording(null);
+  };
+
+  const handleCancelMovement = () => {
+    if (!mobileRecording) return;
+    // Restore original position
+    const s = useStore.getState();
+    s.updateElement(mobileRecording.elementId, {
+      x: mobileRecording.startX,
+      y: mobileRecording.startY,
+      rotation: mobileRecording.startRotation,
+    });
+    setMobileRecording(null);
   };
 
   return (
     <>
-      {/* Selection action bar — shown when element is selected */}
-      {selectedEl && (
+      {/* Recording mode: simplified bar */}
+      {mobileRecording && (
+        <div className="mobile-selection-bar recording">
+          <div className="selection-info">
+            Ziehe das Element zur Zielposition
+          </div>
+          <div className="selection-actions">
+            <button className="selection-btn" onClick={handleCancelMovement}>
+              <span>✕</span><span>Abbrechen</span>
+            </button>
+            <button className="selection-btn confirm" onClick={handleFinishMovement}>
+              <span>✓</span><span>Fertig</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Selection action bar — shown when element is selected (not during recording) */}
+      {selectedEl && !mobileRecording && (
         <div className="mobile-selection-bar">
           <div className="selection-info">
             {ELEMENT_TYPE_NAMES[selectedEl.type] || selectedEl.type}
@@ -62,8 +123,8 @@ export function MobileNav() {
             <button className="selection-btn" onClick={handleProperties} title="Eigenschaften">
               <span>⚙️</span><span>Eigensch.</span>
             </button>
-            <button className="selection-btn" onClick={handleKeyframe} title="Keyframe">
-              <span>◆</span><span>Keyframe</span>
+            <button className="selection-btn" onClick={handleStartMovement} title="Bewegung aufnehmen">
+              <span>🏃</span><span>Bewegung</span>
             </button>
             <button className="selection-btn" onClick={handleDuplicate} title="Duplizieren">
               <span>📋</span><span>Kopieren</span>
@@ -75,8 +136,8 @@ export function MobileNav() {
         </div>
       )}
 
-      {/* Zoom controls — floating, moves up when selection bar visible */}
-      <div className="mobile-zoom" style={selectedEl ? { bottom: 126 } : undefined}>
+      {/* Zoom controls — floating */}
+      <div className="mobile-zoom" style={(selectedEl || mobileRecording) ? { bottom: 126 } : undefined}>
         <button onClick={() => setZoom(zoom - 0.25)} disabled={zoom <= 0.5}>−</button>
         <span>{Math.round(zoom * 100)}%</span>
         <button onClick={() => setZoom(zoom + 0.25)} disabled={zoom >= 2.0}>+</button>
@@ -84,17 +145,26 @@ export function MobileNav() {
 
       {/* Bottom navigation */}
       <div className="bottom-nav">
-        {TOOLS.map(t => (
-          <button
-            key={t.mode}
-            className={`bottom-nav-btn ${mode === t.mode ? 'active' : ''}`}
-            onClick={() => { setMode(t.mode); if (mobileDrawer) setMobileDrawer(null); }}
-            title={t.label}
-          >
-            <span className="bottom-nav-icon">{t.icon}</span>
-            <span className="bottom-nav-label">{t.label}</span>
-          </button>
-        ))}
+        {TOOLS.map(t => {
+          const isActive = t.mode === 'select'
+            ? mode === 'select' && !placementType
+            : mode === t.mode;
+          return (
+            <button
+              key={t.mode}
+              className={`bottom-nav-btn ${isActive ? 'active' : ''}`}
+              onClick={() => {
+                setMode(t.mode);
+                if (t.mode !== 'select') setPlacementType(null);
+                if (mobileDrawer) setMobileDrawer(null);
+              }}
+              title={t.label}
+            >
+              <span className="bottom-nav-icon">{t.icon}</span>
+              <span className="bottom-nav-label">{t.label}</span>
+            </button>
+          );
+        })}
         <button
           className={`bottom-nav-btn ${mobileDrawer === 'sidebar' ? 'active' : ''}`}
           onClick={() => setMobileDrawer(mobileDrawer === 'sidebar' ? null : 'sidebar')}
