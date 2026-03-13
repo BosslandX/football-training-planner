@@ -11,6 +11,7 @@ export function TopBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
 
   // Close overflow when drawer state changes
   useEffect(() => { setOverflowOpen(false); }, [mobileDrawer]);
@@ -105,6 +106,7 @@ export function TopBar() {
   };
 
   const handleExportGIF = async () => {
+    if (exportStatus) return; // Already exporting
     const canvas = document.querySelector('canvas') as HTMLCanvasElement;
     if (!canvas) return;
 
@@ -118,6 +120,8 @@ export function TopBar() {
     const frames: ImageData[] = [];
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    setExportStatus('Frames aufnehmen…');
 
     // Save state and clear selection/keyframe markers for clean export
     const prevSelectedId = state.selectedId;
@@ -134,6 +138,7 @@ export function TopBar() {
       // Wait for React re-render + canvas paint
       await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
       frames.push(ctx.getImageData(0, 0, w, h));
+      setExportStatus(`Frames aufnehmen… ${i + 1}/${totalFrames + 1}`);
     }
 
     // Restore state
@@ -144,7 +149,10 @@ export function TopBar() {
     });
     useStore.getState().interpolateElements(0);
 
-    // Encode GIF with proper quantization + dithering
+    setExportStatus('GIF wird kodiert…');
+    // Yield to UI so the status text renders before heavy computation
+    await new Promise<void>(r => setTimeout(r, 50));
+
     const gifBytes = encodeGif(w, h, frames, Math.round(1000 / fps));
     const blob = new Blob([gifBytes.buffer as ArrayBuffer], { type: 'image/gif' });
     const url = URL.createObjectURL(blob);
@@ -153,6 +161,7 @@ export function TopBar() {
     link.href = url;
     link.click();
     URL.revokeObjectURL(url);
+    setExportStatus(null);
   };
 
   const handleExportVideo = () => {
@@ -214,6 +223,7 @@ export function TopBar() {
 
   return (
     <div className="topbar">
+      {exportStatus && <div className="export-overlay">{exportStatus}</div>}
       {/* Mobile: hamburger button */}
       <button
         className="topbar-btn mobile-only"
