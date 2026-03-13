@@ -9,13 +9,6 @@ const FIELD_TYPES: FieldType[] = [
   'indoor-green', 'indoor-white',
 ];
 
-function fieldLabel(ft: FieldType): string {
-  if (ft.includes('indoor')) return '🏢 Halle' + (ft.includes('green') ? ' 🟢' : ' ⚪');
-  const size = ft.includes('half') ? 'Halb' : 'Ganz';
-  const orient = ft.includes('land') ? ' ↔' : '';
-  const color = ft.includes('green') ? ' 🟢' : ' ⚪';
-  return `🏟️ ${size}${orient}${color}`;
-}
 
 export function TopBar() {
   const { showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer, setConceptTab } = useStore();
@@ -240,7 +233,7 @@ export function TopBar() {
       </div>
       <div className="topbar-divider desktop-only" />
       <div className="topbar-group desktop-only">
-        <button className="topbar-btn" onClick={cycleField}>{fieldLabel(fieldType)}</button>
+        <button className="topbar-btn" onClick={cycleField}>🏟️ Spielfeld</button>
         <button className={`topbar-btn ${showGrid ? 'active' : ''}`} onClick={toggleGrid}>⊞ Raster</button>
         <button className={`topbar-btn ${playerStyle === 'figure' ? 'active' : ''}`} onClick={togglePlayerStyle}>
           {playerStyle === 'figure' ? '👤 Figuren' : '⚪ Kreise'}
@@ -286,7 +279,7 @@ export function TopBar() {
             <button onClick={undo}>↩ Rückgängig</button>
             <button onClick={redo}>↪ Wiederholen</button>
             <div className="overflow-separator" />
-            <button onClick={cycleField}>{fieldLabel(fieldType)}</button>
+            <button onClick={cycleField}>🏟️ Spielfeld</button>
             <button onClick={toggleGrid}>{showGrid ? '⊞ Raster aus' : '⊞ Raster an'}</button>
             <button onClick={togglePlayerStyle}>{playerStyle === 'figure' ? '⚪ Kreise' : '👤 Figuren'}</button>
             <div className="overflow-separator" />

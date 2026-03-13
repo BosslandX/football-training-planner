@@ -117,12 +117,12 @@ function drawFieldLandscape(ctx: CanvasRenderingContext2D, ox: number, oy: numbe
   const goalY = oy + (h - goalW) / 2;
   ctx.strokeRect(ox, goalY, goalH, goalW);
 
-  // Penalty dot + arc left
+  // Penalty dot + arc left (arc extends rightward, outside box)
   ctx.beginPath();
   ctx.arc(ox + 72 * s, oy + h / 2, 3 * s, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(ox + 72 * s, oy + h / 2, 60 * s, -0.65 + Math.PI / 2, 0.65 + Math.PI / 2);
+  ctx.arc(ox + 72 * s, oy + h / 2, 60 * s, -0.93, 0.93);
   ctx.stroke();
 
   if (!isHalf) {
@@ -130,12 +130,12 @@ function drawFieldLandscape(ctx: CanvasRenderingContext2D, ox: number, oy: numbe
     ctx.strokeRect(ox + w - penH, penY, penH, penW);
     // Goal area right
     ctx.strokeRect(ox + w - goalH, goalY, goalH, goalW);
-    // Penalty dot + arc right
+    // Penalty dot + arc right (arc extends leftward, outside box)
     ctx.beginPath();
     ctx.arc(ox + w - 72 * s, oy + h / 2, 3 * s, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(ox + w - 72 * s, oy + h / 2, 60 * s, Math.PI / 2 + Math.PI - 0.65, Math.PI / 2 + Math.PI + 0.65);
+    ctx.arc(ox + w - 72 * s, oy + h / 2, 60 * s, Math.PI - 0.93, Math.PI + 0.93);
     ctx.stroke();
   }
 

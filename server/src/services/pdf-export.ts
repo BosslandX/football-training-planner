@@ -160,12 +160,12 @@ function buildMultiPageHtml(exercises: ExerciseData[]): string {
         ctx.strokeRect(0, (h-penW2)/2, penH2, penW2);
         ctx.strokeRect(0, (h-120)/2, 36, 120);
         ctx.beginPath(); ctx.arc(72, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(72, h/2, 60, -0.65+Math.PI/2, 0.65+Math.PI/2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(72, h/2, 60, -0.93, 0.93); ctx.stroke();
         if (!isHalf) {
           ctx.strokeRect(w-penH2, (h-penW2)/2, penH2, penW2);
           ctx.strokeRect(w-36, (h-120)/2, 36, 120);
           ctx.beginPath(); ctx.arc(w-72, h/2, 3, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(w-72, h/2, 60, Math.PI/2+Math.PI-0.65, Math.PI/2+Math.PI+0.65); ctx.stroke();
+          ctx.beginPath(); ctx.arc(w-72, h/2, 60, Math.PI-0.93, Math.PI+0.93); ctx.stroke();
         }
         // Corner arcs
         [[0,0,0,Math.PI/2],[w,0,Math.PI/2,Math.PI]].forEach(([cx,cy,sa,ea]) => {
