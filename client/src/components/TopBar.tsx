@@ -6,7 +6,7 @@ import { encodeGif } from '../utils/gifEncoder';
 const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
 
 export function TopBar() {
-  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer } = useStore();
+  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer, placementType, setConceptTab } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -184,12 +184,17 @@ export function TopBar() {
     }
   };
 
-  const modeBtn = (m: ToolMode, label: string) => (
-    <button
-      className={`topbar-btn ${mode === m ? 'active' : ''}`}
-      onClick={() => setMode(m)}
-    >{label}</button>
-  );
+  const modeBtn = (m: ToolMode, label: string) => {
+    const isActive = m === 'select'
+      ? mode === 'select' && !placementType
+      : mode === m;
+    return (
+      <button
+        className={`topbar-btn ${isActive ? 'active' : ''}`}
+        onClick={() => setMode(m)}
+      >{label}</button>
+    );
+  };
 
   return (
     <div className="topbar">
@@ -233,7 +238,7 @@ export function TopBar() {
       </div>
       <div className="topbar-spacer desktop-only" />
       <div className="topbar-group desktop-only">
-        <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={toggleConcept}>📋 Konzeption</button>
+        <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={() => { setConceptTab('properties'); toggleConcept(); }}>📋 Konzeption</button>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>
         <button className="topbar-btn" onClick={handleExportGIF}>🎬 GIF</button>
