@@ -147,7 +147,7 @@ export const useStore = create<AppState>((set, get) => ({
   concept: { ...defaultConcept },
   showConcept: true,
   mobileDrawer: null,
-  conceptTab: 'concept',
+  conceptTab: 'properties',
   mobileRecording: null,
   exercises: [],
   currentExerciseIndex: 0,
