@@ -24,6 +24,8 @@ export function MobileNav() {
   const setConceptTab = useStore(s => s.setConceptTab);
   const mobileRecording = useStore(s => s.mobileRecording);
   const setMobileRecording = useStore(s => s.setMobileRecording);
+  const animTime = useStore(s => s.animTime);
+  const animDuration = useStore(s => s.animDuration);
 
   const selectedEl = elements.find(e => e.id === selectedId);
 
@@ -44,7 +46,7 @@ export function MobileNav() {
     useStore.getState().duplicateElement(selectedId);
   };
 
-  // Start recording: save current position as "A"
+  // Start recording: save current position as "A" with current timeline as start
   const handleStartMovement = () => {
     if (!selectedEl) return;
     setMobileRecording({
@@ -52,10 +54,12 @@ export function MobileNav() {
       startX: selectedEl.x,
       startY: selectedEl.y,
       startRotation: selectedEl.rotation,
+      startTime: animTime,
+      endTime: animDuration,
     });
   };
 
-  // Finish recording: create keyframe at t=0 (pos A) and t=duration (pos B)
+  // Finish recording: create keyframes at startTime (A) and endTime (B)
   const handleFinishMovement = () => {
     if (!mobileRecording) return;
     const s = useStore.getState();
@@ -63,18 +67,16 @@ export function MobileNav() {
     if (!el) { setMobileRecording(null); return; }
 
     s.saveUndo();
-    // Clear existing keyframes first
-    s.clearKeyframes(el.id);
-    // Keyframe A: start position at t=0
+    // Add keyframe A at startTime (original position)
     s.addKeyframe(el.id, {
-      t: 0,
+      t: mobileRecording.startTime,
       x: mobileRecording.startX,
       y: mobileRecording.startY,
       rotation: mobileRecording.startRotation,
     });
-    // Keyframe B: current position at t=duration
+    // Add keyframe B at endTime (current position)
     s.addKeyframe(el.id, {
-      t: s.animDuration,
+      t: mobileRecording.endTime,
       x: el.x,
       y: el.y,
       rotation: el.rotation,
@@ -84,7 +86,6 @@ export function MobileNav() {
 
   const handleCancelMovement = () => {
     if (!mobileRecording) return;
-    // Restore original position
     const s = useStore.getState();
     s.updateElement(mobileRecording.elementId, {
       x: mobileRecording.startX,
@@ -94,13 +95,35 @@ export function MobileNav() {
     setMobileRecording(null);
   };
 
+  const updateEndTime = (val: string) => {
+    if (!mobileRecording) return;
+    const t = parseFloat(val);
+    if (!isNaN(t) && t > mobileRecording.startTime) {
+      setMobileRecording({ ...mobileRecording, endTime: t });
+    }
+  };
+
   return (
     <>
-      {/* Recording mode: simplified bar */}
+      {/* Recording mode */}
       {mobileRecording && (
         <div className="mobile-selection-bar recording">
           <div className="selection-info">
             Ziehe das Element zur Zielposition
+          </div>
+          <div className="recording-times">
+            <span>Von {mobileRecording.startTime.toFixed(1)}s</span>
+            <span> bis </span>
+            <input
+              type="number"
+              className="recording-time-input"
+              value={mobileRecording.endTime}
+              step={0.5}
+              min={mobileRecording.startTime + 0.5}
+              max={60}
+              onChange={e => updateEndTime(e.target.value)}
+            />
+            <span>s</span>
           </div>
           <div className="selection-actions">
             <button className="selection-btn" onClick={handleCancelMovement}>
@@ -113,7 +136,7 @@ export function MobileNav() {
         </div>
       )}
 
-      {/* Selection action bar — shown when element is selected (not during recording) */}
+      {/* Selection action bar */}
       {selectedEl && !mobileRecording && (
         <div className="mobile-selection-bar">
           <div className="selection-info">
@@ -136,7 +159,7 @@ export function MobileNav() {
         </div>
       )}
 
-      {/* Zoom controls — floating */}
+      {/* Zoom controls */}
       <div className="mobile-zoom" style={(selectedEl || mobileRecording) ? { bottom: 126 } : undefined}>
         <button onClick={() => setZoom(zoom - 0.25)} disabled={zoom <= 0.5}>−</button>
         <span>{Math.round(zoom * 100)}%</span>

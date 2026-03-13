@@ -39,7 +39,7 @@ interface AppState {
   // Mobile
   mobileDrawer: 'sidebar' | 'concept' | null;
   conceptTab: 'concept' | 'properties';
-  mobileRecording: { elementId: number; startX: number; startY: number; startRotation: number } | null;
+  mobileRecording: { elementId: number; startX: number; startY: number; startRotation: number; startTime: number; endTime: number } | null;
 
   // Exercises (multi-exercise support)
   exercises: Exercise[];
@@ -99,7 +99,7 @@ interface AppState {
   // Mobile
   setMobileDrawer: (d: 'sidebar' | 'concept' | null) => void;
   setConceptTab: (t: 'concept' | 'properties') => void;
-  setMobileRecording: (r: { elementId: number; startX: number; startY: number; startRotation: number } | null) => void;
+  setMobileRecording: (r: { elementId: number; startX: number; startY: number; startRotation: number; startTime: number; endTime: number } | null) => void;
 
   // Reset
   resetAll: () => void;

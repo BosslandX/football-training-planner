@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import type { ToolMode, FieldType } from '../types';
+import { encodeGif } from '../utils/gifEncoder';
 
 const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
 
@@ -99,28 +100,43 @@ export function TopBar() {
   };
 
   const handleExportGIF = async () => {
-    try {
-      const state = useStore.getState();
-      const data = state.getExportData();
-      const resp = await fetch('/api/export/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, animDuration: state.animDuration, fps: 15 }),
-      });
-      if (resp.ok) {
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `${data.concept.name || 'training'}.gif`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
-      } else {
-        alert('GIF-Export fehlgeschlagen');
-      }
-    } catch {
-      alert('GIF-Export fehlgeschlagen: Server nicht erreichbar');
+    const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const state = useStore.getState();
+    const { animDuration } = state;
+    const fps = 10;
+    const totalFrames = Math.ceil(animDuration * fps);
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Step through animation and capture frames
+    const frames: ImageData[] = [];
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    for (let i = 0; i <= totalFrames; i++) {
+      const t = (i / totalFrames) * animDuration;
+      state.setAnimTime(t);
+      state.interpolateElements(t);
+      // Force synchronous render by triggering store update
+      await new Promise(r => requestAnimationFrame(() => { requestAnimationFrame(r); }));
+      frames.push(ctx.getImageData(0, 0, w, h));
     }
+
+    // Reset animation
+    state.setAnimTime(0);
+    state.interpolateElements(0);
+
+    // Encode GIF client-side
+    const gifBytes = encodeGif(w, h, frames, Math.round(1000 / fps));
+    const blob = new Blob([gifBytes.buffer as ArrayBuffer], { type: 'image/gif' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `${state.concept.name || 'training'}.gif`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleExportVideo = () => {
