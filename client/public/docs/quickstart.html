@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurzanleitung — Football Training Planner</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1a12;--card:#1a2b1e;--border:#2d4a33;--text:#e8f0e8;--dim:#8fa88f;--green:#2ecc71;--accent:#3498db;--highlight:#e94560;--field:#2d8a4e}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;max-width:860px;margin:0 auto;padding:20px}
+a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:1.8em;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.subtitle{color:var(--dim);font-size:.95em;margin-bottom:24px}
+h2{font-size:1.2em;color:var(--green);margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+h3{font-size:1em;margin:16px 0 8px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:.9em}
+th{text-align:left;padding:8px 10px;background:var(--border);color:var(--text);font-weight:600}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.icon-cell{text-align:center;width:48px}
+.svg-cell{width:44px;text-align:center}
+.svg-cell svg{width:28px;height:38px;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.8em;font-weight:600;margin:0 2px}
+.badge-player{background:#3498db33;color:#3498db}
+.badge-equip{background:#e67e2233;color:#e67e22}
+.badge-goal{background:#ecf0f133;color:#ecf0f1}
+.badge-draw{background:#2ecc7133;color:#2ecc71}
+kbd{background:#222;border:1px solid #444;border-radius:4px;padding:1px 6px;font-size:.85em;font-family:inherit}
+.draw-demo{display:inline-block;width:80px;height:2px;vertical-align:middle;margin:0 6px}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--dim);font-size:.85em}
+.element-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:8px 0}
+.element-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 6px;text-align:center;font-size:.82em}
+.element-item .el-icon{font-size:1.5em;margin-bottom:4px}
+.element-item .el-icon svg{width:30px;height:40px}
+.color-row{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+.color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid var(--border)}
+@media(max-width:600px){body{padding:12px}h1{font-size:1.4em}.element-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<h1>&#9917; Football Training Planner — Kurzanleitung</h1>
+<p class="subtitle">Schnelleinstieg in die wichtigsten Funktionen</p>
+
+<!-- 1. Elemente platzieren -->
+<h2>1. Elemente platzieren</h2>
+<div class="card">
+<p>Elemente aus der <strong>Sidebar</strong> (links) per <strong>Drag &amp; Drop</strong> auf das Spielfeld ziehen — oder klicken, um den Platzierungsmodus zu aktivieren, dann auf das Feld klicken.</p>
+
+<h3>Spieler</h3>
+<div class="element-grid">
+  <div class="element-item"><div class="el-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M27,52 L20,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="17" y="62" width="6" height="5" rx="1.5" fill="#fff"/><path d="M20,67 L20,71 L13,71 L13,69 L15,67 Z" fill="#222"/><path d="M33,52 L40,62" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="37" y="60" width="6" height="5" rx="1.5" fill="#fff"/><path d="M37,65 L37,69 L44,69 L44,67 L42,65 Z" fill="#222"/><path d="M23,42 L37,42 L38,52 L31,51 L29,51 L22,52 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M20,22 C20,20 30,19 30,19 C30,19 40,20 40,22 L38,42 L22,42 Z" fill="#3498db" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M40,24 Q46,28 47,32" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M20,24 Q14,30 12,36" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg></div>Laufen</div>
+  <div class="element-item"><div class="el-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,53 L25,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M35,53 L35,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="22" y="63" width="6" height="5" rx="1.5" fill="#fff"/><rect x="32" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M22,68 L22,72 L29,72 L29,70 L27,68 Z" fill="#222"/><path d="M38,68 L38,72 L31,72 L31,70 L33,68 Z" fill="#222"/><path d="M22,42 L38,42 L37,53 L31,51.5 L29,51.5 L23,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,42 L21,42 Z" fill="#e74c3c" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,33 43,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg></div>Stehen</div>
+  <div class="element-item"><div class="el-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M26,52 L24,65" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="21" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M21,68 L21,72 L28,72 L28,70 L26,68 Z" fill="#222"/><path d="M34,52 Q40,56 44,60" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="41" y="58" width="6" height="5" rx="1.5" fill="#fff"/><path d="M41,63 L41,67 L48,67 L48,65 L46,63 Z" fill="#222"/><path d="M22,42 L38,42 L38,52 L31,51 L29,51 L22,52 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M20,22 C20,20 30,19 30,19 C30,19 40,20 40,22 L38,42 L22,42 Z" fill="#2ecc71" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M20,24 Q14,28 11,34" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M40,24 Q46,30 47,36" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg></div>Passen</div>
+  <div class="element-item"><div class="el-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M26,52 Q22,58 20,66" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M34,52 Q38,58 40,66" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="17" y="64" width="6" height="5" rx="1.5" fill="#fff"/><rect x="37" y="64" width="6" height="5" rx="1.5" fill="#fff"/><path d="M23,69 L23,73 L16,73 L16,71 L18,69 Z" fill="#222"/><path d="M37,69 L37,73 L44,73 L44,71 L42,69 Z" fill="#222"/><path d="M21,42 L39,42 L39,53 L31,52 L29,52 L21,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M18,22 C18,20 30,19 30,19 C30,19 42,20 42,22 L40,42 L20,42 Z" fill="#f39c12" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M18,24 Q10,18 7,12" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M42,24 Q50,18 53,12" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="7" cy="11" r="3.5" fill="#f39c12"/><circle cx="53" cy="11" r="3.5" fill="#f39c12"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg></div>Torwart</div>
+  <div class="element-item"><div class="el-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,52 L25,65" stroke="#2c3e50" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M35,52 L35,65" stroke="#2c3e50" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M22,66 L22,70 L29,70 L29,68 L27,66 Z" fill="#222"/><path d="M38,66 L38,70 L31,70 L31,68 L33,66 Z" fill="#222"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,48 L21,48 Z" fill="#34495e" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/><line x1="30" y1="22" x2="30" y2="48" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/><path d="M27,20 L30,23 L33,20" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#34495e" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,30 44,36" stroke="#34495e" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="17" cy="40" r="2" fill="#f0c8a0"/><circle cx="44" cy="36" r="2" fill="#f0c8a0"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg></div>Trainer</div>
+  <div class="element-item"><div class="el-icon" style="font-size:1.8em">&#x1f9f1;</div>Dummy</div>
+</div>
+
+<h3>Ausrüstung &amp; Tore</h3>
+<table>
+<tr><th class="icon-cell">Icon</th><th>Element</th><th>Beschreibung</th></tr>
+<tr><td class="icon-cell">&#9917;</td><td>Ball</td><td>Weißer Ball mit Muster</td></tr>
+<tr><td class="icon-cell">&#128310;</td><td>Hütchen</td><td>Dreieck, Farbe wählbar</td></tr>
+<tr><td class="icon-cell">│</td><td>Stange</td><td>Gelbe Stange mit rotem Kopf</td></tr>
+<tr><td class="icon-cell">&#x1fa9c;</td><td>Leiter</td><td>Koordinationsleiter</td></tr>
+<tr><td class="icon-cell">&#128681;</td><td>Flagge</td><td>Eckfahne, Farbe wählbar</td></tr>
+<tr><td class="icon-cell">&#11093;</td><td>Ring</td><td>Koordinationsring</td></tr>
+<tr><td class="icon-cell">&#129349;</td><td>Großtor</td><td>Reguläres Tor mit Netz</td></tr>
+<tr><td class="icon-cell">&#8915;</td><td>Minitor</td><td>Kleines Popup-Tor</td></tr>
+<tr><td class="icon-cell">&#8942;&#8942;</td><td>Hütchentor</td><td>Zwei Hütchen als Tor</td></tr>
+</table>
+</div>
+
+<!-- 2. Zeichenwerkzeuge -->
+<h2>2. Zeichenwerkzeuge</h2>
+<div class="card">
+<table>
+<tr><th style="width:140px">Werkzeug</th><th>Beschreibung</th></tr>
+<tr><td><strong>&#8594; Schuss/Pass</strong></td><td>Durchgezogener Pfeil — Passweg oder Schussrichtung</td></tr>
+<tr><td><strong>&#9477; Laufweg</strong></td><td>Gestrichelter Pfeil — Laufweg eines Spielers</td></tr>
+<tr><td><strong>&#8605; Dribbling</strong></td><td>Wellenförmiger Pfeil — Dribbelweg</td></tr>
+<tr><td><strong>&#9645; Zone</strong></td><td>Halbtransparentes Rechteck — Spielzone markieren</td></tr>
+<tr><td><strong>T Text</strong></td><td>Freitext auf dem Spielfeld</td></tr>
+</table>
+<p style="margin-top:10px;color:var(--dim);font-size:.88em">Auf dem Feld klicken und ziehen, um eine Zeichnung zu erstellen. Nummerierung per Rechtsklick oder Eigenschafts-Panel.</p>
+</div>
+
+<!-- 3. Animation -->
+<h2>3. Animation</h2>
+<div class="card">
+<ol style="padding-left:20px;font-size:.92em">
+<li>Element auswählen</li>
+<li>Position verschieben</li>
+<li><strong>+ Keyframe hinzufügen</strong> klicken (Sidebar &rarr; Animation)</li>
+<li>Zeitpunkt in der <strong>Timeline</strong> (unten) ändern, erneut positionieren, neuen Keyframe setzen</li>
+<li><strong>&#9654; Play</strong> drücken — die App interpoliert automatisch zwischen den Keyframes</li>
+</ol>
+<p style="margin-top:10px;color:var(--dim);font-size:.88em">Tipp: Elemente können mit <code>startTime</code>/<code>endTime</code> zeitlich begrenzt sichtbar sein.</p>
+</div>
+
+<!-- 4. Export -->
+<h2>4. Export</h2>
+<div class="card">
+<table>
+<tr><th style="width:100px">Format</th><th>Beschreibung</th></tr>
+<tr><td>&#x1f5bc;&#xfe0f; PNG</td><td>Einzelbild als PNG-Datei (Client-seitig)</td></tr>
+<tr><td>&#128196; PDF</td><td>Mehrseitige PDF mit Konzeptinfos (Server)</td></tr>
+<tr><td>&#127916; GIF</td><td>Animiertes GIF der Timeline (Client-seitig)</td></tr>
+<tr><td>&#127909; Video</td><td>WebM-Video der Animation (MediaRecorder)</td></tr>
+</table>
+</div>
+
+<!-- 5. Tastenkürzel -->
+<h2>5. Tastenkürzel</h2>
+<div class="card">
+<table>
+<tr><th style="width:160px">Taste</th><th>Aktion</th></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Rückgängig</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>Wiederholen</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Element duplizieren</td></tr>
+<tr><td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Element löschen</td></tr>
+<tr><td><kbd>Leertaste</kbd></td><td>Animation abspielen/pausieren</td></tr>
+<tr><td><kbd>Escape</kbd></td><td>Auswahl aufheben</td></tr>
+<tr><td>Mausrad</td><td>Zoom</td></tr>
+<tr><td>Rechte Maustaste + Ziehen</td><td>Spielfeld verschieben (Pan)</td></tr>
+</table>
+</div>
+
+<div class="footer">
+<p><a href="guide.html">&#128214; Vollständige Anleitung &rarr;</a></p>
+<p style="margin-top:8px">Football Training Planner &mdash; Open Source</p>
+</div>
+
+</body>
+</html>

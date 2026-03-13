@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vollständige Anleitung — Football Training Planner</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1a12;--card:#1a2b1e;--card2:#15221a;--border:#2d4a33;--text:#e8f0e8;--dim:#8fa88f;--green:#2ecc71;--green-dark:#1a472a;--accent:#3498db;--highlight:#e94560;--field:#2d8a4e;--field-alt:#35a05a}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;max-width:900px;margin:0 auto;padding:24px}
+a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:2em;margin-bottom:4px}
+.subtitle{color:var(--dim);font-size:1em;margin-bottom:32px}
+h2{font-size:1.4em;color:var(--green);margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+h3{font-size:1.1em;margin:20px 0 10px;color:var(--text)}
+h4{font-size:.95em;margin:14px 0 6px;color:var(--dim)}
+p{margin-bottom:10px}
+ul,ol{padding-left:24px;margin-bottom:12px}
+li{margin-bottom:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px}
+.card-dark{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:.9em;margin-bottom:12px}
+th{text-align:left;padding:8px 10px;background:var(--border);color:var(--text);font-weight:600}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+kbd{background:#222;border:1px solid #444;border-radius:4px;padding:1px 6px;font-size:.85em;font-family:inherit}
+code{background:#1a1a1a;padding:1px 5px;border-radius:3px;font-size:.9em}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 28px;margin-bottom:32px}
+.toc h3{margin-top:0;color:var(--green)}
+.toc ol{counter-reset:toc;list-style:none;padding-left:0}
+.toc li{counter-increment:toc;padding:3px 0}
+.toc li::before{content:counter(toc) ". ";color:var(--dim);font-weight:600}
+.toc a{font-weight:500}
+.svg-showcase{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+.svg-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;width:100px}
+.svg-card svg{width:44px;height:58px;display:block;margin:0 auto 6px}
+.svg-card .label{font-size:.78em;color:var(--dim)}
+.equip-showcase{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:10px 0}
+.equip-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center}
+.equip-card .eq-icon{font-size:1.6em;margin-bottom:6px}
+.equip-card svg{width:50px;height:50px;display:block;margin:0 auto 6px}
+.equip-card .label{font-size:.82em;font-weight:600}
+.equip-card .desc{font-size:.75em;color:var(--dim);margin-top:4px}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center}
+.color-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
+.color-dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15)}
+.color-name{font-size:.82em}
+.field-demo{display:inline-block;width:120px;height:80px;border-radius:6px;border:2px solid var(--border);vertical-align:middle;margin:4px}
+.step-list{counter-reset:step;list-style:none;padding-left:0}
+.step-list li{counter-increment:step;position:relative;padding:10px 0 10px 44px;border-left:2px solid var(--border);margin-left:16px}
+.step-list li::before{content:counter(step);position:absolute;left:-14px;top:8px;width:28px;height:28px;background:var(--green);color:var(--bg);border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:.85em}
+.step-list li:last-child{border-left:none}
+.ui-area{display:inline-block;padding:3px 10px;border-radius:5px;font-size:.82em;font-weight:600;margin:2px}
+.ui-topbar{background:#3498db33;color:#3498db}
+.ui-sidebar{background:#2ecc7133;color:#2ecc71}
+.ui-canvas{background:#e67e2233;color:#e67e22}
+.ui-concept{background:#9b59b633;color:#9b59b6}
+.ui-anim{background:#e9456033;color:#e94560}
+.draw-svg{margin:6px 0}
+.tip{background:#2ecc7115;border-left:3px solid var(--green);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.9em}
+.warn{background:#e9456015;border-left:3px solid var(--highlight);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.9em}
+.footer{margin-top:50px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--dim);font-size:.85em}
+@media(max-width:640px){body{padding:14px}h1{font-size:1.5em}h2{font-size:1.2em}.svg-showcase{gap:8px}.svg-card{width:80px}.svg-card svg{width:34px;height:45px}.equip-showcase{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<h1>&#9917; Football Training Planner</h1>
+<p class="subtitle">Vollständige Anleitung &mdash; alle Funktionen im Detail</p>
+
+<!-- Inhaltsverzeichnis -->
+<nav class="toc" id="top">
+<h3>Inhaltsverzeichnis</h3>
+<ol>
+<li><a href="#overview">Übersicht</a></li>
+<li><a href="#ui">Benutzeroberfläche</a></li>
+<li><a href="#elements">Elemente</a></li>
+<li><a href="#drawing">Zeichenwerkzeuge</a></li>
+<li><a href="#colors">Teamfarben</a></li>
+<li><a href="#animation">Animation &amp; Keyframes</a></li>
+<li><a href="#concept">Konzeption &amp; Eigenschaften</a></li>
+<li><a href="#exercises">Mehrere Übungen</a></li>
+<li><a href="#export">Export</a></li>
+<li><a href="#fields">Feldtypen</a></li>
+<li><a href="#shortcuts">Tastenkürzel &amp; Maus</a></li>
+<li><a href="#mobile">Mobile Nutzung</a></li>
+<li><a href="#tips">Tipps &amp; Tricks</a></li>
+</ol>
+</nav>
+
+<!-- 1. Übersicht -->
+<h2 id="overview">1. Übersicht</h2>
+<div class="card">
+<p>Der <strong>Football Training Planner</strong> ist eine webbasierte Anwendung zum Erstellen von Fußball-Trainingsübungen. Platziere Spieler, Ausrüstung und Tore auf einem Spielfeld, zeichne Lauf- und Passwege ein, animiere Bewegungsabläufe und exportiere das Ergebnis als Bild, PDF, GIF oder Video.</p>
+<p>Die App läuft komplett im Browser (Canvas-basiert) mit optionalem Server-Backend für PDF-Export und Session-Speicherung.</p>
+</div>
+
+<!-- 2. Benutzeroberfläche -->
+<h2 id="ui">2. Benutzeroberfläche</h2>
+<div class="card">
+<p>Die Oberfläche ist in fünf Bereiche unterteilt:</p>
+
+<table>
+<tr><th style="width:140px">Bereich</th><th>Position</th><th>Funktion</th></tr>
+<tr><td><span class="ui-area ui-topbar">TopBar</span></td><td>Oben</td><td>Werkzeuge, Feldtyp, Zoom, Export-Buttons, Undo/Redo</td></tr>
+<tr><td><span class="ui-area ui-sidebar">Sidebar</span></td><td>Links</td><td>Elemente (Spieler, Ausrüstung, Tore), Zeichentools, Teamfarben, Animation</td></tr>
+<tr><td><span class="ui-area ui-canvas">Canvas</span></td><td>Mitte</td><td>Spielfeld &mdash; hier werden Elemente platziert und Zeichnungen erstellt</td></tr>
+<tr><td><span class="ui-area ui-concept">Konzeption</span></td><td>Rechts</td><td>Übungseigenschaften, Beschreibung, Coaching-Punkte, Variationen, Phasen</td></tr>
+<tr><td><span class="ui-area ui-anim">AnimationBar</span></td><td>Unten</td><td>Timeline, Play/Pause, Dauer, Geschwindigkeit</td></tr>
+</table>
+
+<h3>TopBar-Werkzeuge</h3>
+<table>
+<tr><th>Button</th><th>Funktion</th></tr>
+<tr><td>&#8617; / &#8618;</td><td>Rückgängig / Wiederholen</td></tr>
+<tr><td>&#128433;&#65039; Auswahl</td><td>Elemente auswählen und verschieben</td></tr>
+<tr><td>&#8594; &#9477; &#8605; &#9645;</td><td>Zeichenmodi (Pass, Laufweg, Dribbling, Zone)</td></tr>
+<tr><td>&#127967;&#65039; Spielfeld</td><td>Feldtyp wechseln (grün/weiß, ganz/halb)</td></tr>
+<tr><td>&#8862; Raster</td><td>Hilfsraster ein/ausblenden</td></tr>
+<tr><td>&#128100; / &#9898;</td><td>Spielerdarstellung: Figuren oder Kreise</td></tr>
+<tr><td>S / M / L</td><td>Spielergröße: 100% / 125% / 150%</td></tr>
+<tr><td>&#8722; / +</td><td>Zoom (50% &ndash; 200%)</td></tr>
+<tr><td>&#128203; Konzeption</td><td>Konzept-Panel ein/ausblenden</td></tr>
+<tr><td>&#128444;&#65039; &#128196; &#127916; &#127909;</td><td>Export: PNG, PDF, GIF, Video</td></tr>
+<tr><td>&#128465;&#65039; Reset</td><td>Alles zurücksetzen</td></tr>
+</table>
+</div>
+
+<!-- 3. Elemente -->
+<h2 id="elements">3. Elemente</h2>
+
+<h3>3.1 Spieler</h3>
+<div class="card">
+<p>Sechs Spielertypen stehen zur Verfügung. Jeder wird als detaillierte Figur mit Trikot, Hose, Stutzen und Schuhen dargestellt. Die Trikotfarbe entspricht der gewählten Teamfarbe.</p>
+
+<div class="svg-showcase">
+<!-- Laufen -->
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M27,52 L20,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="17" y="62" width="6" height="5" rx="1.5" fill="#fff"/><path d="M20,67 L20,71 L13,71 L13,69 L15,67 Z" fill="#222"/><path d="M33,52 L40,62" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="37" y="60" width="6" height="5" rx="1.5" fill="#fff"/><path d="M37,65 L37,69 L44,69 L44,67 L42,65 Z" fill="#222"/><path d="M23,42 L37,42 L38,52 L31,51 L29,51 L22,52 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M20,22 C20,20 30,19 30,19 C30,19 40,20 40,22 L38,42 L22,42 Z" fill="#3498db" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M40,24 Q46,28 47,32" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M20,24 Q14,30 12,36" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Laufen<br><code>player-run</code></div>
+</div>
+
+<!-- Stehen -->
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,53 L25,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M35,53 L35,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="22" y="63" width="6" height="5" rx="1.5" fill="#fff"/><rect x="32" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M22,68 L22,72 L29,72 L29,70 L27,68 Z" fill="#222"/><path d="M38,68 L38,72 L31,72 L31,70 L33,68 Z" fill="#222"/><path d="M22,42 L38,42 L37,53 L31,51.5 L29,51.5 L23,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,42 L21,42 Z" fill="#3498db" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><line x1="19" y1="22" x2="17" y2="27" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/><line x1="41" y1="22" x2="43" y2="27" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/><path d="M19,24 Q15,33 17,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,33 43,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Stehen<br><code>player-stand</code></div>
+</div>
+
+<!-- Passen -->
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M26,52 L24,65" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="21" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M21,68 L21,72 L28,72 L28,70 L26,68 Z" fill="#222"/><path d="M34,52 Q40,56 44,60" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="41" y="58" width="6" height="5" rx="1.5" fill="#fff"/><path d="M41,63 L41,67 L48,67 L48,65 L46,63 Z" fill="#222"/><path d="M22,42 L38,42 L38,52 L31,51 L29,51 L22,52 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M20,22 C20,20 30,19 30,19 C30,19 40,20 40,22 L38,42 L22,42 Z" fill="#3498db" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M20,24 Q14,28 11,34" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M40,24 Q46,30 47,36" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Passen<br><code>player-pass</code></div>
+</div>
+
+<!-- Torwart -->
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M26,52 Q22,58 20,66" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M34,52 Q38,58 40,66" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="17" y="64" width="6" height="5" rx="1.5" fill="#fff"/><rect x="37" y="64" width="6" height="5" rx="1.5" fill="#fff"/><path d="M23,69 L23,73 L16,73 L16,71 L18,69 Z" fill="#222"/><path d="M37,69 L37,73 L44,73 L44,71 L42,69 Z" fill="#222"/><path d="M21,42 L39,42 L39,53 L31,52 L29,52 L21,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M18,22 C18,20 30,19 30,19 C30,19 42,20 42,22 L40,42 L20,42 Z" fill="#f39c12" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M18,24 Q10,18 7,12" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M42,24 Q50,18 53,12" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="7" cy="11" r="3.5" fill="#f39c12"/><circle cx="53" cy="11" r="3.5" fill="#f39c12"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Torwart<br><code>goalkeeper</code></div>
+</div>
+
+<!-- Trainer -->
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,52 L25,65" stroke="#2c3e50" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M35,52 L35,65" stroke="#2c3e50" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M22,66 L22,70 L29,70 L29,68 L27,66 Z" fill="#222"/><path d="M38,66 L38,70 L31,70 L31,68 L33,66 Z" fill="#222"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,48 L21,48 Z" fill="#34495e" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/><line x1="30" y1="22" x2="30" y2="48" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/><path d="M27,20 L30,23 L33,20" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#34495e" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,30 44,36" stroke="#34495e" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="17" cy="40" r="2" fill="#f0c8a0"/><circle cx="44" cy="36" r="2" fill="#f0c8a0"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Trainer<br><code>trainer</code></div>
+</div>
+
+<!-- Dummy -->
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+<ellipse cx="30" cy="32" rx="9" ry="12" fill="#e67e22"/>
+<rect x="27" y="32" width="6" height="22" fill="#e67e22"/>
+<circle cx="30" cy="20" r="6" fill="#e67e22"/>
+</svg>
+<div class="label">Dummy<br><code>dummy</code></div>
+</div>
+</div>
+
+<h4>Spieler-Eigenschaften</h4>
+<table>
+<tr><th>Eigenschaft</th><th>Beschreibung</th></tr>
+<tr><td>Teamfarbe</td><td>Trikotfarbe &mdash; 8 Farben verfügbar</td></tr>
+<tr><td>Nummer</td><td>Rückennummer auf dem Trikot</td></tr>
+<tr><td>Label</td><td>Beschriftung unter der Figur</td></tr>
+<tr><td>Pose</td><td>Stehen, Laufen, Passen, Torwart, Trainer</td></tr>
+<tr><td>Darstellung</td><td>Figur (SVG) oder Kreis &mdash; umschaltbar in der TopBar</td></tr>
+<tr><td>Größe</td><td>S (100%), M (125%), L (150%) &mdash; umschaltbar in der TopBar</td></tr>
+</table>
+
+<div class="tip">Die Nummer wird automatisch auf dem Trikot angezeigt. Beim Torwart erscheint &bdquo;TW&ldquo;, beim Trainer &bdquo;TR&ldquo; als Standard.</div>
+</div>
+
+<h3>3.2 Ausrüstung</h3>
+<div class="card">
+<div class="equip-showcase">
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+<circle cx="25" cy="25" r="12" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<circle cx="25" cy="25" r="4" fill="#333"/>
+</svg>
+<div class="label">Ball</div>
+<div class="desc">Weißer Spielball</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+<path d="M25,10 L35,35 L15,35 Z" fill="#e67e22" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+</svg>
+<div class="label">Hütchen</div>
+<div class="desc">Markierung, Farbe wählbar</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+<line x1="25" y1="8" x2="25" y2="42" stroke="#f1c40f" stroke-width="4" stroke-linecap="round"/>
+<circle cx="25" cy="8" r="4" fill="#e74c3c"/>
+</svg>
+<div class="label">Stange</div>
+<div class="desc">Slalomstange</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+<line x1="15" y1="5" x2="15" y2="45" stroke="#f1c40f" stroke-width="3"/>
+<line x1="35" y1="5" x2="35" y2="45" stroke="#f1c40f" stroke-width="3"/>
+<line x1="15" y1="11" x2="35" y2="11" stroke="#f1c40f" stroke-width="2"/>
+<line x1="15" y1="18" x2="35" y2="18" stroke="#f1c40f" stroke-width="2"/>
+<line x1="15" y1="25" x2="35" y2="25" stroke="#f1c40f" stroke-width="2"/>
+<line x1="15" y1="32" x2="35" y2="32" stroke="#f1c40f" stroke-width="2"/>
+<line x1="15" y1="39" x2="35" y2="39" stroke="#f1c40f" stroke-width="2"/>
+</svg>
+<div class="label">Leiter</div>
+<div class="desc">Koordinationsleiter</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+<line x1="18" y1="40" x2="18" y2="10" stroke="#888" stroke-width="2"/>
+<path d="M18,10 L36,16 L18,22 Z" fill="#e74c3c"/>
+</svg>
+<div class="label">Flagge</div>
+<div class="desc">Eckfahne, Farbe wählbar</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+<circle cx="25" cy="25" r="14" fill="none" stroke="#e67e22" stroke-width="3"/>
+</svg>
+<div class="label">Ring</div>
+<div class="desc">Koordinationsring</div>
+</div>
+</div>
+</div>
+
+<h3>3.3 Tore</h3>
+<div class="card">
+<div class="equip-showcase">
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30">
+<rect x="5" y="5" width="50" height="20" fill="rgba(255,255,255,0.1)"/>
+<path d="M5,25 L5,5 L55,5 L55,25" fill="none" stroke="#fff" stroke-width="3"/>
+<line x1="15" y1="5" x2="15" y2="25" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+<line x1="25" y1="5" x2="25" y2="25" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+<line x1="35" y1="5" x2="35" y2="25" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+<line x1="45" y1="5" x2="45" y2="25" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+</svg>
+<div class="label">Großtor</div>
+<div class="desc">Reguläres Tor mit Netzstruktur</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30">
+<path d="M10,25 L10,8 L40,8 L40,25" fill="none" stroke="#ccc" stroke-width="2.5"/>
+</svg>
+<div class="label">Minitor</div>
+<div class="desc">Kleines Popup-Tor</div>
+</div>
+
+<div class="equip-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30">
+<path d="M15,8 L22,22 L8,22 Z" fill="#e67e22"/>
+<path d="M45,8 L52,22 L38,22 Z" fill="#e67e22"/>
+</svg>
+<div class="label">Hütchentor</div>
+<div class="desc">Zwei Hütchen als Tor</div>
+</div>
+</div>
+</div>
+
+<h3>3.4 Elemente platzieren</h3>
+<div class="card">
+<p>Es gibt zwei Wege, Elemente auf dem Feld zu platzieren:</p>
+<ol>
+<li><strong>Drag &amp; Drop:</strong> Element aus der Sidebar ziehen und auf dem Spielfeld ablegen</li>
+<li><strong>Klick-Modus:</strong> In der Sidebar auf ein Element klicken (es wird hervorgehoben), dann auf das Spielfeld klicken &mdash; das Element erscheint an der Klickposition</li>
+</ol>
+
+<h4>Elemente bearbeiten</h4>
+<ul>
+<li><strong>Verschieben:</strong> Klicken und ziehen</li>
+<li><strong>Auswählen:</strong> Klicken (gestrichelter Rahmen zeigt Auswahl)</li>
+<li><strong>Drehen:</strong> Im Eigenschaftspanel den Rotationswert ändern</li>
+<li><strong>Löschen:</strong> Auswählen + <kbd>Delete</kbd> oder <kbd>Backspace</kbd></li>
+<li><strong>Duplizieren:</strong> <kbd>Ctrl</kbd> + <kbd>D</kbd></li>
+</ul>
+</div>
+
+<!-- 4. Zeichenwerkzeuge -->
+<h2 id="drawing">4. Zeichenwerkzeuge</h2>
+<div class="card">
+<p>Zeichenwerkzeuge werden über die TopBar oder die Sidebar unter &bdquo;Zeichnen&ldquo; aktiviert. Klicke und ziehe auf dem Spielfeld, um zu zeichnen.</p>
+
+<h3>4.1 Schuss/Pass (&#8594;)</h3>
+<p>Durchgezogener Pfeil mit Pfeilspitze. Zeigt Schuss- oder Passrichtung an.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" class="draw-svg" width="200" height="40">
+<line x1="10" y1="20" x2="170" y2="20" stroke="#fff" stroke-width="2.5"/>
+<path d="M170,20 L158,14 L158,26 Z" fill="#fff"/>
+</svg>
+
+<h3>4.2 Laufweg (&#9477;)</h3>
+<p>Gestrichelter Pfeil. Zeigt Laufwege von Spielern an.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" class="draw-svg" width="200" height="40">
+<line x1="10" y1="20" x2="170" y2="20" stroke="#fff" stroke-width="2.5" stroke-dasharray="8 6"/>
+<path d="M170,20 L158,14 L158,26 Z" fill="#fff"/>
+</svg>
+
+<h3>4.3 Dribbling (&#8605;)</h3>
+<p>Wellenförmiger Pfeil. Zeigt Dribbelwege an.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" class="draw-svg" width="200" height="40">
+<path d="M10,20 Q30,8 50,20 Q70,32 90,20 Q110,8 130,20 Q150,32 165,20 L170,20" fill="none" stroke="#fff" stroke-width="2.5"/>
+<path d="M170,20 L158,14 L158,26 Z" fill="#fff"/>
+</svg>
+
+<h3>4.4 Zone (&#9645;)</h3>
+<p>Halbtransparentes Rechteck mit gestricheltem Rand. Markiert Spielzonen, Bereiche oder taktische Räume.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" class="draw-svg" width="200" height="60">
+<rect x="10" y="5" width="180" height="50" fill="rgba(255,255,255,0.13)" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>
+</svg>
+
+<h3>4.5 Text (T)</h3>
+<p>Freitext auf dem Spielfeld platzieren. Klicke auf das Feld, gib den Text ein.</p>
+
+<h3>Linienfarben</h3>
+<p>Zeichnungen können in 5 Farben erstellt werden:</p>
+<div class="color-row">
+<div class="color-chip"><div class="color-dot" style="background:#fff"></div><span class="color-name">Weiß</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#f1c40f"></div><span class="color-name">Gelb</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#e74c3c"></div><span class="color-name">Rot</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#3498db"></div><span class="color-name">Blau</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#2ecc71"></div><span class="color-name">Grün</span></div>
+</div>
+
+<h3>Nummerierung</h3>
+<p>Pfeile (Pass, Laufweg, Dribbling) können nummeriert werden, um die Reihenfolge der Aktionen zu verdeutlichen. Die Nummer wird als Kreis in der Mitte des Pfeils angezeigt.</p>
+</div>
+
+<!-- 5. Teamfarben -->
+<h2 id="colors">5. Teamfarben</h2>
+<div class="card">
+<p>8 Teamfarben stehen zur Auswahl. Die Farbe wird in der Sidebar unter &bdquo;Teamfarbe&ldquo; gesetzt und gilt für neu platzierte Spieler. Bestehende Spieler können nachträglich umgefärbt werden, indem man sie auswählt und eine neue Farbe klickt.</p>
+
+<div class="color-row">
+<div class="color-chip"><div class="color-dot" style="background:#3498db"></div><span class="color-name">Blau</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#e74c3c"></div><span class="color-name">Rot</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#f1c40f"></div><span class="color-name">Gelb</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#2ecc71"></div><span class="color-name">Grün</span></div>
+</div>
+<div class="color-row" style="margin-top:4px">
+<div class="color-chip"><div class="color-dot" style="background:#e67e22"></div><span class="color-name">Orange</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#9b59b6"></div><span class="color-name">Lila</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#ecf0f1"></div><span class="color-name">Weiß</span></div>
+<div class="color-chip"><div class="color-dot" style="background:#2c3e50"></div><span class="color-name">Schwarz</span></div>
+</div>
+
+<h4>Farbbeispiele an Spielerfiguren</h4>
+<div class="svg-showcase">
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,53 L25,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M35,53 L35,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="22" y="63" width="6" height="5" rx="1.5" fill="#fff"/><rect x="32" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M22,68 L22,72 L29,72 L29,70 L27,68 Z" fill="#222"/><path d="M38,68 L38,72 L31,72 L31,70 L33,68 Z" fill="#222"/><path d="M22,42 L38,42 L37,53 L31,51.5 L29,51.5 L23,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,42 L21,42 Z" fill="#3498db" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,33 43,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Blau</div>
+</div>
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,53 L25,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M35,53 L35,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="22" y="63" width="6" height="5" rx="1.5" fill="#fff"/><rect x="32" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M22,68 L22,72 L29,72 L29,70 L27,68 Z" fill="#222"/><path d="M38,68 L38,72 L31,72 L31,70 L33,68 Z" fill="#222"/><path d="M22,42 L38,42 L37,53 L31,51.5 L29,51.5 L23,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,42 L21,42 Z" fill="#e74c3c" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,33 43,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Rot</div>
+</div>
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,53 L25,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M35,53 L35,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="22" y="63" width="6" height="5" rx="1.5" fill="#fff"/><rect x="32" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M22,68 L22,72 L29,72 L29,70 L27,68 Z" fill="#222"/><path d="M38,68 L38,72 L31,72 L31,70 L33,68 Z" fill="#222"/><path d="M22,42 L38,42 L37,53 L31,51.5 L29,51.5 L23,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,42 L21,42 Z" fill="#f1c40f" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,33 43,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Gelb</div>
+</div>
+<div class="svg-card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"><path d="M25,53 L25,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M35,53 L35,64" stroke="#f0c8a0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="22" y="63" width="6" height="5" rx="1.5" fill="#fff"/><rect x="32" y="63" width="6" height="5" rx="1.5" fill="#fff"/><path d="M22,68 L22,72 L29,72 L29,70 L27,68 Z" fill="#222"/><path d="M38,68 L38,72 L31,72 L31,70 L33,68 Z" fill="#222"/><path d="M22,42 L38,42 L37,53 L31,51.5 L29,51.5 L23,53 Z" fill="#fff" stroke="#ddd" stroke-width="0.5"/><path d="M19,22 C19,20 30,19 30,19 C30,19 41,20 41,22 L39,42 L21,42 Z" fill="#2ecc71" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/><path d="M27,20 L30,23.5 L33,20" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8"/><path d="M19,24 Q15,33 17,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M41,24 Q45,33 43,40" stroke="#f0c8a0" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="28" y="18" width="4" height="3" rx="1" fill="#f0c8a0"/><circle cx="30" cy="12" r="7" fill="#f0c8a0" stroke="#d4a574" stroke-width="0.5"/><path d="M24,10 Q27,3 30,4 Q33,3 36,10" fill="#3d2b1f"/></svg>
+<div class="label">Grün</div>
+</div>
+</div>
+</div>
+
+<!-- 6. Animation & Keyframes -->
+<h2 id="animation">6. Animation &amp; Keyframes</h2>
+<div class="card">
+<p>Jedes Element kann über <strong>Keyframes</strong> animiert werden. Keyframes definieren Position und Zeitpunkt &mdash; die App interpoliert automatisch dazwischen.</p>
+
+<h3>Schritt für Schritt</h3>
+<ol class="step-list">
+<li><strong>Element auswählen</strong> &mdash; Klicke auf einen Spieler oder ein Objekt</li>
+<li><strong>Zeitpunkt in der Timeline setzen</strong> &mdash; Unten in der AnimationBar den Slider auf den gewünschten Zeitpunkt ziehen (z.B. 0.0s)</li>
+<li><strong>Keyframe hinzufügen</strong> &mdash; In der Sidebar unter &bdquo;Animation&ldquo; auf &bdquo;+ Keyframe hinzufügen&ldquo; klicken. Die aktuelle Position wird gespeichert.</li>
+<li><strong>Element verschieben</strong> &mdash; Ziehe das Element zur nächsten Position und setze den Zeitpunkt weiter (z.B. 2.0s)</li>
+<li><strong>Weiteren Keyframe hinzufügen</strong> &mdash; Erneut &bdquo;+ Keyframe hinzufügen&ldquo; klicken</li>
+<li><strong>Abspielen</strong> &mdash; <kbd>Leertaste</kbd> drücken oder &#9654; Play in der AnimationBar klicken</li>
+</ol>
+
+<h3>Timeline (AnimationBar)</h3>
+<table>
+<tr><th style="width:140px">Steuerelement</th><th>Funktion</th></tr>
+<tr><td>&#9654; Play/Pause</td><td>Animation starten/stoppen</td></tr>
+<tr><td>Timeline-Slider</td><td>Aktuellen Zeitpunkt setzen</td></tr>
+<tr><td>Dauer</td><td>Gesamtdauer der Animation ändern</td></tr>
+<tr><td>Geschwindigkeit</td><td>Wiedergabegeschwindigkeit (0.5x &ndash; 2x)</td></tr>
+</table>
+
+<h3>Keyframe-Pfade</h3>
+<p>Wenn ein Element Keyframes hat, zeigt die App eine <strong>gestrichelte Linie</strong> (rot) mit Punkten an jedem Keyframe. Grüner Punkt = Startposition, rote Punkte = weitere Keyframes. An jedem Punkt wird der Zeitstempel angezeigt.</p>
+
+<h3>Zeitliche Sichtbarkeit</h3>
+<p>Elemente können mit <code>startTime</code> und <code>endTime</code> zeitlich begrenzt werden. Während der Animation erscheinen sie erst ab <code>startTime</code> und verschwinden nach <code>endTime</code>. So lassen sich komplexe Übungen in Phasen darstellen.</p>
+</div>
+
+<!-- 7. Konzeption & Eigenschaften -->
+<h2 id="concept">7. Konzeption &amp; Eigenschaften</h2>
+<div class="card">
+<p>Das Konzept-Panel (rechts, öffnet sich über &#128203; Konzeption) enthält zwei Tabs:</p>
+
+<h3>Tab: Eigenschaften</h3>
+<p>Hier werden die Übungseigenschaften des ausgewählten Elements oder der gesamten Übung bearbeitet.</p>
+<table>
+<tr><th>Feld</th><th>Beschreibung</th></tr>
+<tr><td>Name</td><td>Titel der Übung</td></tr>
+<tr><td>Kategorie</td><td>Aufwärmen, Technik, Taktik, Spielform, Torschuss, Kondition, Auslaufen</td></tr>
+<tr><td>Dauer (Min.)</td><td>Geplante Übungsdauer</td></tr>
+<tr><td>Spieleranzahl</td><td>Anzahl benötigter Spieler</td></tr>
+<tr><td>Feldgröße</td><td>Freitext (z.B. &bdquo;20x30m&ldquo;)</td></tr>
+<tr><td>Beschreibung</td><td>Ausführliche Übungsbeschreibung</td></tr>
+<tr><td>Coaching-Punkte</td><td>Wichtige Hinweise für den Trainer</td></tr>
+<tr><td>Variationen</td><td>Abwandlungen der Übung</td></tr>
+</table>
+
+<h3>Tab: Phasen</h3>
+<p>Übungen können in mehrere Phasen unterteilt werden. Jede Phase hat einen Namen und eine Beschreibung. Phasen erscheinen in der PDF-Exportdatei.</p>
+
+<h3>Material-Übersicht</h3>
+<p>Das Panel zeigt automatisch eine Zusammenfassung des benötigten Materials (Anzahl der Hütchen, Bälle, Stangen usw.) basierend auf den platzierten Elementen.</p>
+</div>
+
+<!-- 8. Mehrere Übungen -->
+<h2 id="exercises">8. Mehrere Übungen</h2>
+<div class="card">
+<p>Der Planner unterstützt mehrere Übungen in einer Session. Übungen werden als <strong>Tabs</strong> unterhalb der AnimationBar angezeigt.</p>
+<ul>
+<li><strong>Neue Übung:</strong> &bdquo;+&ldquo; Tab klicken</li>
+<li><strong>Zwischen Übungen wechseln:</strong> Auf den entsprechenden Tab klicken</li>
+<li><strong>Jede Übung hat:</strong> eigene Elemente, Zeichnungen, Feldtyp, Konzeptdaten und Animation</li>
+</ul>
+<p>Beim PDF-Export werden alle Übungen auf separaten Seiten dargestellt.</p>
+</div>
+
+<!-- 9. Export -->
+<h2 id="export">9. Export</h2>
+<div class="card">
+<table>
+<tr><th style="width:100px">Format</th><th>Verarbeitung</th><th>Beschreibung</th></tr>
+<tr><td>&#128444;&#65039; PNG</td><td>Client</td><td>Einzelbild des aktuellen Canvas. Erzeugt ein hochauflösendes Screenshot-Bild der aktuellen Übung. Die Auswahl wird temporär ausgeblendet für einen sauberen Export.</td></tr>
+<tr><td>&#128196; PDF</td><td>Server</td><td>Mehrseitige PDF mit Spielfeldgrafik und allen Konzeptinformationen (Name, Beschreibung, Coaching-Punkte, Phasen, Material). Bei mehreren Übungen enthält die PDF alle Übungen. Falls der Server nicht erreichbar ist, wird auf PNG zurückgefallen.</td></tr>
+<tr><td>&#127916; GIF</td><td>Client</td><td>Animiertes GIF der gesamten Timeline. Die App nimmt Frame für Frame auf (15 FPS), kodiert das GIF im Browser (inkl. Fortschrittsanzeige) und bietet es zum Download an.</td></tr>
+<tr><td>&#127909; Video</td><td>Client</td><td>WebM-Video via MediaRecorder API. Die Animation wird abgespielt und gleichzeitig aufgenommen. Resultat ist ein WebM-Video (30 FPS) zum Download.</td></tr>
+</table>
+
+<div class="tip">Der Dateiname basiert automatisch auf dem Übungsnamen. Falls kein Name gesetzt ist, wird &bdquo;training&ldquo; als Standard verwendet.</div>
+</div>
+
+<!-- 10. Feldtypen -->
+<h2 id="fields">10. Feldtypen</h2>
+<div class="card">
+<p>Vier Feldtypen stehen zur Auswahl. Wechsel über &#127967;&#65039; <strong>Spielfeld</strong> in der TopBar (zyklisch).</p>
+
+<table>
+<tr><th style="width:140px">Feldtyp</th><th>Beschreibung</th></tr>
+<tr>
+<td><strong>Ganz &mdash; Grün</strong></td>
+<td>Vollständiges Spielfeld mit grünen Rasenstreifen, allen Markierungen (Mittelkreis, Strafraum, Torraum, Eckfahnen). Standard-Ansicht.</td>
+</tr>
+<tr>
+<td><strong>Ganz &mdash; Weiß</strong></td>
+<td>Vollständiges Spielfeld auf weißem Hintergrund. Besser zum Drucken geeignet.</td>
+</tr>
+<tr>
+<td><strong>Halb &mdash; Grün</strong></td>
+<td>Nur eine Spielfeldhälfte mit grünem Rasen. Ideal für Torschuss- und Angriffsübungen.</td>
+</tr>
+<tr>
+<td><strong>Halb &mdash; Weiß</strong></td>
+<td>Halbes Feld auf weißem Hintergrund.</td>
+</tr>
+</table>
+</div>
+
+<!-- 11. Tastenkürzel & Maus -->
+<h2 id="shortcuts">11. Tastenkürzel &amp; Maus</h2>
+<div class="card">
+<h3>Tastenkürzel</h3>
+<table>
+<tr><th style="width:180px">Taste</th><th>Aktion</th></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Rückgängig (Undo)</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>Wiederholen (Redo)</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Ausgewähltes Element duplizieren</td></tr>
+<tr><td><kbd>Delete</kbd></td><td>Ausgewähltes Element löschen</td></tr>
+<tr><td><kbd>Backspace</kbd></td><td>Ausgewähltes Element löschen (alternativ)</td></tr>
+<tr><td><kbd>Leertaste</kbd></td><td>Animation abspielen / pausieren</td></tr>
+<tr><td><kbd>Escape</kbd></td><td>Auswahl aufheben, Platzierungsmodus beenden</td></tr>
+</table>
+
+<h3>Maussteuerung</h3>
+<table>
+<tr><th style="width:180px">Aktion</th><th>Funktion</th></tr>
+<tr><td>Linksklick</td><td>Element auswählen / platzieren</td></tr>
+<tr><td>Linksklick + Ziehen</td><td>Element verschieben / Zeichnung erstellen</td></tr>
+<tr><td>Rechtsklick + Ziehen</td><td>Spielfeld verschieben (Pan)</td></tr>
+<tr><td>Mausrad</td><td>Zoom (rein/raus)</td></tr>
+<tr><td>Doppelklick</td><td>Element-Eigenschaften öffnen</td></tr>
+</table>
+</div>
+
+<!-- 12. Mobile Nutzung -->
+<h2 id="mobile">12. Mobile Nutzung</h2>
+<div class="card">
+<p>Die App ist responsive und auf Mobilgeräten nutzbar. Die Oberfläche passt sich automatisch an:</p>
+
+<h3>Mobile Navigation</h3>
+<ul>
+<li><strong>&#9776; Hamburger-Menü</strong> (oben links) &mdash; öffnet die Sidebar als Overlay</li>
+<li><strong>&#128203; Konzeption</strong> &mdash; öffnet das Konzept-Panel als Overlay</li>
+<li><strong>&#8942; Mehr</strong> &mdash; öffnet das Overflow-Menü mit allen weiteren Funktionen (Undo, Redo, Feldtyp, Zoom, Export, Reset)</li>
+</ul>
+
+<h3>Touch-Gesten</h3>
+<table>
+<tr><th>Geste</th><th>Funktion</th></tr>
+<tr><td>Tippen</td><td>Element auswählen</td></tr>
+<tr><td>Tippen + Ziehen</td><td>Element verschieben</td></tr>
+<tr><td>Zwei-Finger-Pinch</td><td>Zoom</td></tr>
+<tr><td>Zwei-Finger-Drag</td><td>Spielfeld verschieben</td></tr>
+</table>
+</div>
+
+<!-- 13. Tipps & Tricks -->
+<h2 id="tips">13. Tipps &amp; Tricks</h2>
+<div class="card">
+<h3>Workflow-Empfehlungen</h3>
+<ul>
+<li><strong>Immer zuerst das Spielfeld wählen</strong> &mdash; Ganz vs. Halb, Grün vs. Weiß, je nach Übungstyp</li>
+<li><strong>Raster einschalten</strong> für symmetrisches Platzieren</li>
+<li><strong>Konzeption zuerst ausfüllen</strong> &mdash; Name und Kategorie setzen, bevor Elemente platziert werden (der Name wird als Dateiname beim Export verwendet)</li>
+<li><strong>Teams mit Farben unterscheiden</strong> &mdash; z.B. Blau für Angreifer, Rot für Verteidiger</li>
+<li><strong>Zeichnungen nummerieren</strong> &mdash; Pfeile mit Nummern versehen, um die Reihenfolge der Aktionen klar zu machen</li>
+</ul>
+
+<h3>Animation-Tipps</h3>
+<ul>
+<li><strong>Wenige Keyframes reichen</strong> &mdash; Die Interpolation erzeugt flüssige Bewegungen auch mit 2-3 Keyframes pro Element</li>
+<li><strong>Zeitliche Sichtbarkeit nutzen</strong> &mdash; <code>startTime</code>/<code>endTime</code> setzen, um Elemente phasenweise ein-/auszublenden</li>
+<li><strong>GIF-Export für Präsentationen</strong> &mdash; Leicht teilbar und überall abspielbar</li>
+<li><strong>Video für volle Qualität</strong> &mdash; WebM für verlustfreie Aufnahme der Animation</li>
+</ul>
+
+<h3>Performance</h3>
+<ul>
+<li>Figuren-Darstellung (SVG) ist detaillierter, aber die Kreisdarstellung ist schneller bei vielen Spielern</li>
+<li>Bei komplexen Übungen mit vielen Elementen: Spielergröße S nutzen</li>
+<li>Für den Druck: Weißes Feld wählen (spart Tinte, besserer Kontrast)</li>
+</ul>
+</div>
+
+<div class="footer">
+<p><a href="quickstart.html">&#9889; Kurzanleitung</a> &nbsp;|&nbsp; <a href="#top">&#8593; Nach oben</a></p>
+<p style="margin-top:8px">Football Training Planner &mdash; Open Source</p>
+</div>
+
+</body>
+</html>
