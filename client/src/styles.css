@@ -168,7 +168,8 @@ body {
   width: 100%;
   transition: background .15s;
 }
-.add-btn:hover { background: var(--highlight); }
+.add-btn:hover:not(:disabled) { background: var(--highlight); }
+.add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .add-btn.danger { background: #c0392b; }
 
 /* CANVAS AREA */

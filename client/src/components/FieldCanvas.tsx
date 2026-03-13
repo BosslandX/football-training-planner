@@ -199,7 +199,7 @@ export function FieldCanvas() {
     }
 
     if (s.mode === 'select') {
-      // Click-to-place: if a tool is selected, place element
+      // Click-to-place: if a tool is selected, place element then return to select mode
       if (s.placementType) {
         s.saveUndo();
         const playerCount = s.elements.filter(el => el.type.startsWith('player')).length;
@@ -216,6 +216,7 @@ export function FieldCanvas() {
           endTime: -1,
           scale: s.playerScale,
         });
+        s.setPlacementType(null);
         return;
       }
 
