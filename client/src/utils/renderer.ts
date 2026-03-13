@@ -821,7 +821,8 @@ export function hitTestDrawing(drawings: Drawing[], fx: number, fy: number): Dra
 
 export function hitTestElement(
   elements: FieldElement[], fx: number, fy: number,
-  animTime?: number, animPlaying?: boolean
+  animTime?: number, animPlaying?: boolean,
+  toleranceMultiplier: number = 1
 ): FieldElement | null {
   for (let i = elements.length - 1; i >= 0; i--) {
     const el = elements[i];
@@ -833,7 +834,8 @@ export function hitTestElement(
     }
     const dx = fx - el.x, dy = fy - el.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const hitR = el.type.includes('goal') ? 30 : el.type === 'ladder' ? 28 : 20;
+    const baseR = el.type.includes('goal') ? 30 : el.type === 'ladder' ? 28 : 20;
+    const hitR = baseR * toleranceMultiplier;
     if (dist < hitR) return el;
   }
   return null;

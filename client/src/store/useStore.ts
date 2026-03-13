@@ -38,6 +38,7 @@ interface AppState {
 
   // Mobile
   mobileDrawer: 'sidebar' | 'concept' | null;
+  conceptTab: 'concept' | 'properties';
 
   // Exercises (multi-exercise support)
   exercises: Exercise[];
@@ -96,6 +97,7 @@ interface AppState {
 
   // Mobile
   setMobileDrawer: (d: 'sidebar' | 'concept' | null) => void;
+  setConceptTab: (t: 'concept' | 'properties') => void;
 
   // Reset
   resetAll: () => void;
@@ -143,6 +145,7 @@ export const useStore = create<AppState>((set, get) => ({
   concept: { ...defaultConcept },
   showConcept: true,
   mobileDrawer: null,
+  conceptTab: 'concept',
   exercises: [],
   currentExerciseIndex: 0,
   undoStack: [],
@@ -281,6 +284,7 @@ export const useStore = create<AppState>((set, get) => ({
   })),
   toggleConcept: () => set(s => ({ showConcept: !s.showConcept })),
   setMobileDrawer: (d) => set({ mobileDrawer: d }),
+  setConceptTab: (t) => set({ conceptTab: t }),
 
   addPhase: () => set(s => ({
     concept: {

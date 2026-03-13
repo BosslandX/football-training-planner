@@ -21,6 +21,7 @@ export function FieldCanvas() {
   const scaleRef = useRef(1);
   const offsetRef = useRef({ x: 0, y: 0 });
   const contextMenuRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null);
 
   const store = useStore();
 
@@ -362,7 +363,19 @@ export function FieldCanvas() {
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
+    // Pinch-to-zoom: two fingers
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchRef.current = {
+        startDist: Math.sqrt(dx * dx + dy * dy),
+        startZoom: useStore.getState().zoom,
+      };
+      return;
+    }
     if (e.touches.length !== 1) return;
+    pinchRef.current = null;
     e.preventDefault();
     const pos = getTouchPos(e);
     if (!pos) return;
@@ -387,7 +400,8 @@ export function FieldCanvas() {
         });
         return;
       }
-      const hit = hitTestElement(s.elements, fp.x, fp.y);
+      // Larger hit radius for touch (1.8x)
+      const hit = hitTestElement(s.elements, fp.x, fp.y, undefined, undefined, 1.8);
       if (hit) {
         s.setSelected(hit.id);
         dragRef.current = { id: hit.id, offsetX: fp.x - hit.x, offsetY: fp.y - hit.y };
@@ -405,6 +419,17 @@ export function FieldCanvas() {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+    // Pinch-to-zoom
+    if (e.touches.length === 2 && pinchRef.current) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const ratio = dist / pinchRef.current.startDist;
+      const newZoom = Math.round(pinchRef.current.startZoom * ratio * 4) / 4; // snap to 0.25
+      useStore.getState().setZoom(newZoom);
+      return;
+    }
     if (e.touches.length !== 1) return;
     e.preventDefault();
     const pos = getTouchPos(e);
@@ -426,6 +451,10 @@ export function FieldCanvas() {
 
   const onTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
+    if (pinchRef.current) {
+      pinchRef.current = null;
+      return;
+    }
     const s = useStore.getState();
 
     if (dragRef.current) {

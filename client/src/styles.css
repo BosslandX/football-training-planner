@@ -587,11 +587,101 @@ textarea.phase-input { resize: vertical; min-height: 40px; }
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
+
+  /* Mobile selection bar (appears above bottom nav when element selected) */
+  .mobile-selection-bar {
+    position: fixed;
+    bottom: 56px;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    z-index: 101;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .selection-info {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--highlight);
+    text-align: center;
+  }
+  .selection-actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 4px;
+  }
+  .selection-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px;
+    min-width: 60px;
+    min-height: 44px;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: background 0.15s;
+  }
+  .selection-btn:hover, .selection-btn:active { background: var(--highlight); }
+  .selection-btn.danger { background: #7f1d1d; border-color: #991b1b; }
+  .selection-btn.danger:hover, .selection-btn.danger:active { background: #991b1b; }
+  .selection-btn span:first-child { font-size: 16px; }
+
+  /* Mobile zoom controls (floating) */
+  .mobile-zoom {
+    position: fixed;
+    bottom: 62px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px;
+    z-index: 98;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .mobile-zoom button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-zoom button:disabled { opacity: 0.3; }
+  .mobile-zoom button:active { background: var(--highlight); }
+  .mobile-zoom span {
+    font-size: 11px;
+    min-width: 36px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  /* Move zoom up when selection bar is visible */
+  .mobile-selection-bar ~ .mobile-zoom {
+    /* Handled by DOM order: selection bar pushes zoom up via sibling selector isn't great */
+  }
 }
 
-/* Desktop: hide bottom-nav and drawer-overlay */
+/* Desktop: hide mobile-only elements */
 @media (min-width: 769px) {
   .bottom-nav { display: none; }
   .drawer-overlay { display: none; }
   .concept-panel.hidden-desktop { display: none; }
+  .mobile-selection-bar { display: none; }
+  .mobile-zoom { display: none; }
 }

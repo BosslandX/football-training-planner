@@ -1,12 +1,10 @@
-import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { CATEGORIES, ELEMENT_TYPE_NAMES, TEAM_COLORS } from '../types';
 import type { ElementType } from '../types';
 
 export function ConceptPanel() {
-  const [tab, setTab] = useState<'concept' | 'properties'>('concept');
   const store = useStore();
-  const { concept, updateConcept, addPhase, updatePhase, removePhase, addCoachingPoint, updateCoachingPoint, addVariation, updateVariation, elements, selectedId, mobileDrawer, showConcept } = store;
+  const { concept, updateConcept, addPhase, updatePhase, removePhase, addCoachingPoint, updateCoachingPoint, addVariation, updateVariation, elements, selectedId, mobileDrawer, showConcept, conceptTab: tab, setConceptTab: setTab } = store;
 
   const selectedEl = elements.find(e => e.id === selectedId);
 
