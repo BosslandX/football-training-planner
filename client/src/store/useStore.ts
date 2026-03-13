@@ -106,12 +106,15 @@ interface AppState {
 
   // Exercises
   switchExercise: (index: number) => void;
+  addExercise: () => void;
+  removeExercise: (index: number) => void;
 
   // Import
   importTrainingPlan: (data: ImportResult) => void;
 
   // Export helper
   getExportData: () => { elements: FieldElement[]; drawings: Drawing[]; concept: ConceptData; fieldType: FieldType };
+  getAllExportData: () => Exercise[];
 }
 
 const defaultConcept: ConceptData = {
@@ -401,6 +404,88 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
+  addExercise: () => {
+    const state = get();
+    // Save current state into exercises array
+    const updatedExercises = [...state.exercises];
+    if (updatedExercises.length === 0) {
+      // First time: wrap current state as exercise[0]
+      updatedExercises.push({
+        concept: state.concept,
+        elements: state.elements,
+        drawings: state.drawings,
+        fieldType: state.fieldType,
+      });
+    } else {
+      updatedExercises[state.currentExerciseIndex] = {
+        concept: state.concept,
+        elements: state.elements,
+        drawings: state.drawings,
+        fieldType: state.fieldType,
+      };
+    }
+    // Add new empty exercise
+    updatedExercises.push({
+      concept: { ...defaultConcept },
+      elements: [],
+      drawings: [],
+      fieldType: state.fieldType,
+    });
+    set({
+      exercises: updatedExercises,
+      currentExerciseIndex: updatedExercises.length - 1,
+      elements: [],
+      drawings: [],
+      concept: { ...defaultConcept },
+      selectedId: null,
+      animTime: 0,
+      animPlaying: false,
+      undoStack: [],
+      redoStack: [],
+    });
+  },
+
+  removeExercise: (index) => {
+    const state = get();
+    if (state.exercises.length <= 1) return;
+
+    // Save current state first
+    const updatedExercises = [...state.exercises];
+    updatedExercises[state.currentExerciseIndex] = {
+      concept: state.concept,
+      elements: state.elements,
+      drawings: state.drawings,
+      fieldType: state.fieldType,
+    };
+
+    // Remove the target exercise
+    updatedExercises.splice(index, 1);
+
+    // Determine new index
+    let newIndex = state.currentExerciseIndex;
+    if (index === state.currentExerciseIndex) {
+      // Deleted current: go to neighbor
+      newIndex = Math.min(index, updatedExercises.length - 1);
+    } else if (index < state.currentExerciseIndex) {
+      newIndex = state.currentExerciseIndex - 1;
+    }
+
+    const target = updatedExercises[newIndex];
+    set({
+      exercises: updatedExercises,
+      currentExerciseIndex: newIndex,
+      elements: target.elements,
+      drawings: target.drawings,
+      concept: target.concept,
+      fieldType: target.fieldType,
+      selectedId: null,
+      animTime: 0,
+      animPlaying: false,
+      undoStack: [],
+      redoStack: [],
+    });
+  },
+
   importTrainingPlan: (data: ImportResult) => {
     let nextId = 1;
 
@@ -456,5 +541,27 @@ export const useStore = create<AppState>((set, get) => ({
       concept: s.concept,
       fieldType: s.fieldType,
     };
+  },
+
+  getAllExportData: () => {
+    const s = get();
+    // Sync current state into exercises array
+    const exercises = [...s.exercises];
+    if (exercises.length === 0) {
+      // Single exercise mode: wrap current state
+      return [{
+        concept: s.concept,
+        elements: s.elements,
+        drawings: s.drawings,
+        fieldType: s.fieldType,
+      }];
+    }
+    exercises[s.currentExerciseIndex] = {
+      concept: s.concept,
+      elements: s.elements,
+      drawings: s.drawings,
+      fieldType: s.fieldType,
+    };
+    return exercises;
   },
 }));

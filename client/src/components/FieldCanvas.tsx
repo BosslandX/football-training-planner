@@ -1,14 +1,11 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
-import { drawField, drawElement, drawDrawing, hitTestElement, hitTestDrawing } from '../utils/renderer';
+import { drawField, drawElement, drawDrawing, hitTestElement, hitTestDrawing, getFieldDimensions } from '../utils/renderer';
 import { preloadPlayerImages } from '../utils/playerImageCache';
 import type { ElementType } from '../types';
 import { TEAM_COLORS } from '../types';
 import { ContextMenu } from './ContextMenu';
 
-const FIELD_W = 680;
-const FIELD_H_FULL = 1020;
-const FIELD_H_HALF = 510;
 const FIELD_PAD = 40;
 
 export function FieldCanvas() {
@@ -26,8 +23,8 @@ export function FieldCanvas() {
 
   const store = useStore();
 
-  const getFieldH = useCallback(() => {
-    return store.fieldType.includes('half') ? FIELD_H_HALF : FIELD_H_FULL;
+  const getDims = useCallback(() => {
+    return getFieldDimensions(store.fieldType);
   }, [store.fieldType]);
 
   const resize = useCallback(() => {
@@ -37,9 +34,9 @@ export function FieldCanvas() {
 
     const ww = wrapper.clientWidth - 20;
     const wh = wrapper.clientHeight - 20;
-    const fieldH = getFieldH();
-    const fw = FIELD_W + FIELD_PAD * 2;
-    const fh = fieldH + FIELD_PAD * 2;
+    const dims = getDims();
+    const fw = dims.w + FIELD_PAD * 2;
+    const fh = dims.h + FIELD_PAD * 2;
     const zoom = useStore.getState().zoom;
     const baseScale = Math.min(ww / fw, wh / fh, 1.2);
     const scale = baseScale * zoom;
@@ -51,7 +48,7 @@ export function FieldCanvas() {
     // Vertically center canvas when smaller than wrapper
     const extraY = Math.max(0, (wrapper.clientHeight - canvas.height - 20) / 2);
     canvas.style.marginTop = extraY > 0 ? `${extraY}px` : '0';
-  }, [getFieldH]);
+  }, [getDims]);
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -60,13 +57,13 @@ export function FieldCanvas() {
     if (!ctx) return;
 
     const s = useStore.getState();
-    const fieldH = s.fieldType.includes('half') ? FIELD_H_HALF : FIELD_H_FULL;
+    const dims = getFieldDimensions(s.fieldType);
     const cfg = {
       scale: scaleRef.current,
       offsetX: offsetRef.current.x,
       offsetY: offsetRef.current.y,
-      fieldW: FIELD_W,
-      fieldH,
+      fieldW: dims.w,
+      fieldH: dims.h,
       fieldType: s.fieldType,
       showGrid: s.showGrid,
       selectedId: s.selectedId,

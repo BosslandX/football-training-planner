@@ -8,7 +8,10 @@ export type DrawingType = 'arrow' | 'dashed' | 'curved' | 'zone' | 'text';
 
 export type ToolMode = 'select' | DrawingType;
 
-export type FieldType = 'full-green' | 'full-white' | 'half-green' | 'half-white';
+export type FieldType =
+  | 'full-green' | 'full-white' | 'half-green' | 'half-white'
+  | 'full-green-land' | 'full-white-land' | 'half-green-land' | 'half-white-land'
+  | 'indoor-green' | 'indoor-white';
 
 export interface Keyframe {
   t: number;

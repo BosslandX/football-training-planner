@@ -5,18 +5,26 @@ export const exportPDFRoute = Router();
 
 exportPDFRoute.post('/pdf', async (req, res) => {
   try {
-    const { elements, drawings, concept, fieldType } = req.body;
+    let exercises: any[];
 
-    if (!elements || !concept) {
-      res.status(400).json({ error: 'Missing required data (elements, concept)' });
+    if (req.body.exercises && Array.isArray(req.body.exercises)) {
+      // New format: { exercises: Exercise[] }
+      exercises = req.body.exercises;
+    } else if (req.body.elements && req.body.concept) {
+      // Backward-compatible: single exercise format
+      const { elements, drawings, concept, fieldType } = req.body;
+      exercises = [{ elements, drawings, concept, fieldType }];
+    } else {
+      res.status(400).json({ error: 'Missing required data (exercises[] or elements+concept)' });
       return;
     }
 
-    const pdfBuffer = await generatePDF({ elements, drawings, concept, fieldType });
+    const pdfBuffer = await generatePDF(exercises);
 
+    const firstName = exercises[0]?.concept?.name || 'training';
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${concept.name || 'training'}.pdf"`,
+      'Content-Disposition': `attachment; filename="${firstName}.pdf"`,
       'Content-Length': pdfBuffer.length.toString(),
     });
     res.send(pdfBuffer);

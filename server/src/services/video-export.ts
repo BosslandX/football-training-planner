@@ -13,9 +13,14 @@ export async function generateAnimationFrames(data: VideoExportData): Promise<Bu
   const totalFrames = Math.ceil(animDuration * fps);
   const frameDelay = 1000 / fps;
   const isHalf = fieldType.includes('half');
-  const fieldH = isHalf ? 510 : 1020;
-  const canvasW = 680;
-  const canvasH = fieldH;
+  const isLand = fieldType.includes('land') || fieldType.includes('indoor');
+  const isIndoor = fieldType.includes('indoor');
+  let canvasW: number, canvasH: number;
+  if (isIndoor) { canvasW = 960; canvasH = 480; }
+  else if (isLand && isHalf) { canvasW = 510; canvasH = 680; }
+  else if (isLand) { canvasW = 1020; canvasH = 680; }
+  else if (isHalf) { canvasW = 680; canvasH = 510; }
+  else { canvasW = 680; canvasH = 1020; }
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -48,6 +53,8 @@ function buildAnimationHtml(
 ): string {
   const isGreen = fieldType.includes('green');
   const isHalf = fieldType.includes('half');
+  const isLand = fieldType.includes('land') || fieldType.includes('indoor');
+  const isIndoor = fieldType.includes('indoor');
 
   return `<!DOCTYPE html>
 <html>
@@ -262,6 +269,8 @@ function buildAnimationHtml(
     const fps = ${fps};
     const isGreen = ${isGreen};
     const isHalf = ${isHalf};
+    const isLand = ${isLand};
+    const isIndoor = ${isIndoor};
     const w = ${canvasW}, h = ${canvasH};
 
     function interpolate(el, t) {
@@ -283,10 +292,18 @@ function buildAnimationHtml(
 
     function drawField() {
       if (isGreen) {
-        const sh = h / 16;
-        for (let i = 0; i < 16; i++) {
-          ctx.fillStyle = i % 2 === 0 ? '#2d8a4e' : '#35a05a';
-          ctx.fillRect(0, i * sh, w, sh);
+        if (isLand) {
+          const sw = w / 16;
+          for (let i = 0; i < 16; i++) {
+            ctx.fillStyle = i % 2 === 0 ? '#2d8a4e' : '#35a05a';
+            ctx.fillRect(i * sw, 0, sw, h);
+          }
+        } else {
+          const sh = h / 16;
+          for (let i = 0; i < 16; i++) {
+            ctx.fillStyle = i % 2 === 0 ? '#2d8a4e' : '#35a05a';
+            ctx.fillRect(0, i * sh, w, sh);
+          }
         }
       } else {
         ctx.fillStyle = '#f5f5f5';
@@ -295,14 +312,37 @@ function buildAnimationHtml(
       const lc = isGreen ? '#fff' : '#333';
       ctx.strokeStyle = lc; ctx.fillStyle = lc; ctx.lineWidth = 2;
       ctx.strokeRect(0, 0, w, h);
-      if (!isHalf) { ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke(); }
-      const cy = isHalf ? h : h/2;
-      ctx.beginPath(); ctx.arc(w/2, cy, 60, isHalf ? Math.PI : 0, isHalf ? 0 : Math.PI*2); ctx.stroke();
-      ctx.strokeRect((w-264)/2, 0, 264, 108);
-      ctx.strokeRect((w-120)/2, 0, 120, 36);
-      if (!isHalf) {
-        ctx.strokeRect((w-264)/2, h-108, 264, 108);
-        ctx.strokeRect((w-120)/2, h-36, 120, 36);
+
+      if (isIndoor) {
+        ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+        ctx.beginPath(); ctx.arc(w/2, h/2, 50, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(w/2, h/2, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, h/2, 90, -Math.PI/2, Math.PI/2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(w, h/2, 90, Math.PI/2, Math.PI*1.5); ctx.stroke();
+        ctx.beginPath(); ctx.arc(72, h/2, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(w-72, h/2, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(130, h/2, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(w-130, h/2, 3, 0, Math.PI*2); ctx.fill();
+      } else if (isLand) {
+        if (!isHalf) { ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke(); }
+        const cx2 = isHalf ? w : w/2;
+        ctx.beginPath(); ctx.arc(cx2, h/2, 60, isHalf ? Math.PI/2 : 0, isHalf ? Math.PI*1.5 : Math.PI*2); ctx.stroke();
+        ctx.strokeRect(0, (h-264)/2, 108, 264);
+        ctx.strokeRect(0, (h-120)/2, 36, 120);
+        if (!isHalf) {
+          ctx.strokeRect(w-108, (h-264)/2, 108, 264);
+          ctx.strokeRect(w-36, (h-120)/2, 36, 120);
+        }
+      } else {
+        if (!isHalf) { ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke(); }
+        const cy = isHalf ? h : h/2;
+        ctx.beginPath(); ctx.arc(w/2, cy, 60, isHalf ? Math.PI : 0, isHalf ? 0 : Math.PI*2); ctx.stroke();
+        ctx.strokeRect((w-264)/2, 0, 264, 108);
+        ctx.strokeRect((w-120)/2, 0, 120, 36);
+        if (!isHalf) {
+          ctx.strokeRect((w-264)/2, h-108, 264, 108);
+          ctx.strokeRect((w-120)/2, h-36, 120, 36);
+        }
       }
     }
 

@@ -97,6 +97,21 @@ body {
   color: var(--highlight);
   border-bottom-color: var(--highlight);
 }
+.exercise-tab-close {
+  margin-left: 8px;
+  font-size: 15px;
+  opacity: 0.4;
+  cursor: pointer;
+  line-height: 1;
+}
+.exercise-tab-close:hover { opacity: 1; color: #e74c3c; }
+.exercise-tab-add {
+  color: var(--text-dim);
+  font-size: 18px;
+  padding: 6px 14px;
+  opacity: 0.6;
+}
+.exercise-tab-add:hover { opacity: 1; color: var(--highlight); }
 
 /* MAIN LAYOUT */
 .main { display: flex; flex: 1; overflow: hidden; }

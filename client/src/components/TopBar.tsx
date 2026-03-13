@@ -1,12 +1,24 @@
 import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import type { ToolMode, FieldType } from '../types';
+import type { FieldType } from '../types';
 import { encodeGif } from '../utils/gifEncoder';
 
-const FIELD_TYPES: FieldType[] = ['full-green', 'full-white', 'half-green', 'half-white'];
+const FIELD_TYPES: FieldType[] = [
+  'full-green', 'full-white', 'half-green', 'half-white',
+  'full-green-land', 'full-white-land', 'half-green-land', 'half-white-land',
+  'indoor-green', 'indoor-white',
+];
+
+function fieldLabel(ft: FieldType): string {
+  if (ft.includes('indoor')) return '🏢 Halle' + (ft.includes('green') ? ' 🟢' : ' ⚪');
+  const size = ft.includes('half') ? 'Halb' : 'Ganz';
+  const orient = ft.includes('land') ? ' ↔' : '';
+  const color = ft.includes('green') ? ' 🟢' : ' ⚪';
+  return `🏟️ ${size}${orient}${color}`;
+}
 
 export function TopBar() {
-  const { mode, setMode, showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer, placementType, setConceptTab } = useStore();
+  const { showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer, setConceptTab } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -84,17 +96,18 @@ export function TopBar() {
 
   const handleExportPDF = async () => {
     try {
-      const data = useStore.getState().getExportData();
+      const exercises = useStore.getState().getAllExportData();
       const resp = await fetch('/api/export/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ exercises }),
       });
       if (resp.ok) {
         const blob = await resp.blob();
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = `${data.concept.name || 'training'}.pdf`;
+        const firstName = exercises[0]?.concept.name || 'training';
+        link.download = `${firstName}.pdf`;
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
@@ -209,18 +222,6 @@ export function TopBar() {
     }
   };
 
-  const modeBtn = (m: ToolMode, label: string) => {
-    const isActive = m === 'select'
-      ? mode === 'select' && !placementType
-      : mode === m;
-    return (
-      <button
-        className={`topbar-btn ${isActive ? 'active' : ''}`}
-        onClick={() => setMode(m)}
-      >{label}</button>
-    );
-  };
-
   return (
     <div className="topbar">
       {exportStatus && <div className="export-overlay">{exportStatus}</div>}
@@ -239,15 +240,7 @@ export function TopBar() {
       </div>
       <div className="topbar-divider desktop-only" />
       <div className="topbar-group desktop-only">
-        {modeBtn('select', '🖱️ Auswahl')}
-        {modeBtn('arrow', '→ Schuss/Pass')}
-        {modeBtn('dashed', '┅ Laufweg')}
-        {modeBtn('curved', '↝ Dribbling')}
-        {modeBtn('zone', '▭ Zone')}
-      </div>
-      <div className="topbar-divider desktop-only" />
-      <div className="topbar-group desktop-only">
-        <button className="topbar-btn" onClick={cycleField}>🏟️ Spielfeld</button>
+        <button className="topbar-btn" onClick={cycleField}>{fieldLabel(fieldType)}</button>
         <button className={`topbar-btn ${showGrid ? 'active' : ''}`} onClick={toggleGrid}>⊞ Raster</button>
         <button className={`topbar-btn ${playerStyle === 'figure' ? 'active' : ''}`} onClick={togglePlayerStyle}>
           {playerStyle === 'figure' ? '👤 Figuren' : '⚪ Kreise'}
@@ -265,6 +258,8 @@ export function TopBar() {
       <div className="topbar-spacer desktop-only" />
       <div className="topbar-group desktop-only">
         <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={() => { setConceptTab('properties'); toggleConcept(); }}>📋 Konzeption</button>
+        <a className="topbar-btn" href="/docs/quickstart.html" target="_blank" rel="noopener">📖 Schnellstart</a>
+        <a className="topbar-btn" href="/docs/guide.html" target="_blank" rel="noopener">📚 Anleitung</a>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>
         <button className="topbar-btn" onClick={handleExportGIF}>🎬 GIF</button>
@@ -291,7 +286,7 @@ export function TopBar() {
             <button onClick={undo}>↩ Rückgängig</button>
             <button onClick={redo}>↪ Wiederholen</button>
             <div className="overflow-separator" />
-            <button onClick={cycleField}>🏟️ Spielfeld</button>
+            <button onClick={cycleField}>{fieldLabel(fieldType)}</button>
             <button onClick={toggleGrid}>{showGrid ? '⊞ Raster aus' : '⊞ Raster an'}</button>
             <button onClick={togglePlayerStyle}>{playerStyle === 'figure' ? '⚪ Kreise' : '👤 Figuren'}</button>
             <div className="overflow-separator" />
