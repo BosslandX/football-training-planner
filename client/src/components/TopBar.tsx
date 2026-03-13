@@ -69,11 +69,16 @@ export function TopBar() {
   const handleExport = async () => {
     const canvas = document.querySelector('canvas');
     if (!canvas) return;
+    // Clear selection for clean export
+    const prevSelectedId = useStore.getState().selectedId;
+    useStore.setState({ selectedId: null });
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
     const link = document.createElement('a');
     const name = useStore.getState().concept.name || 'training';
     link.download = `${name}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+    useStore.setState({ selectedId: prevSelectedId });
   };
 
   const handleExportPDF = async () => {
@@ -105,30 +110,41 @@ export function TopBar() {
 
     const state = useStore.getState();
     const { animDuration } = state;
-    const fps = 10;
+    const fps = 15;
     const totalFrames = Math.ceil(animDuration * fps);
     const w = canvas.width;
     const h = canvas.height;
 
-    // Step through animation and capture frames
     const frames: ImageData[] = [];
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Save state and clear selection/keyframe markers for clean export
+    const prevSelectedId = state.selectedId;
+    const prevAnimPlaying = state.animPlaying;
+    useStore.setState({ selectedId: null, animPlaying: true });
+
+    // Wait for clean render without selection artifacts
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
     for (let i = 0; i <= totalFrames; i++) {
       const t = (i / totalFrames) * animDuration;
-      state.setAnimTime(t);
-      state.interpolateElements(t);
-      // Force synchronous render by triggering store update
-      await new Promise(r => requestAnimationFrame(() => { requestAnimationFrame(r); }));
+      useStore.getState().setAnimTime(t);
+      useStore.getState().interpolateElements(t);
+      // Wait for React re-render + canvas paint
+      await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
       frames.push(ctx.getImageData(0, 0, w, h));
     }
 
-    // Reset animation
-    state.setAnimTime(0);
-    state.interpolateElements(0);
+    // Restore state
+    useStore.setState({
+      animTime: 0,
+      animPlaying: prevAnimPlaying,
+      selectedId: prevSelectedId,
+    });
+    useStore.getState().interpolateElements(0);
 
-    // Encode GIF client-side
+    // Encode GIF with proper quantization + dithering
     const gifBytes = encodeGif(w, h, frames, Math.round(1000 / fps));
     const blob = new Blob([gifBytes.buffer as ArrayBuffer], { type: 'image/gif' });
     const url = URL.createObjectURL(blob);
