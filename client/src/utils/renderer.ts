@@ -553,17 +553,62 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: FieldElement, cfg
     }
     case 'ball': {
       const r = 10 * s;
+      // White base
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fillStyle = '#fff';
       ctx.fill();
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 1.2 * s;
       ctx.stroke();
+
+      // Pentagon pattern (classic football look)
       ctx.fillStyle = '#333';
+      ctx.strokeStyle = '#555';
+      ctx.lineWidth = 0.5 * s;
+      // Center pentagon
+      const pr = r * 0.38;
       ctx.beginPath();
-      ctx.arc(x, y, r * 0.35, 0, Math.PI * 2);
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        const px = x + Math.cos(a) * pr;
+        const py = y + Math.sin(a) * pr;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
       ctx.fill();
+
+      // Lines from pentagon corners to outer edge
+      ctx.strokeStyle = '#bbb';
+      ctx.lineWidth = 0.7 * s;
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        const ix = x + Math.cos(a) * pr;
+        const iy = y + Math.sin(a) * pr;
+        const ox2 = x + Math.cos(a) * r * 0.85;
+        const oy2 = y + Math.sin(a) * r * 0.85;
+        ctx.beginPath();
+        ctx.moveTo(ix, iy);
+        ctx.lineTo(ox2, oy2);
+        ctx.stroke();
+      }
+
+      // Outer pentagons (partial V shapes at edges)
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        const aL = ((i - 0.5) * 2 * Math.PI) / 5 - Math.PI / 2;
+        const aR = ((i + 0.5) * 2 * Math.PI) / 5 - Math.PI / 2;
+        const tip = r * 0.85;
+        const edge = r * 0.92;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(aL) * edge, y + Math.sin(aL) * edge);
+        ctx.lineTo(x + Math.cos(a) * tip, y + Math.sin(a) * tip);
+        ctx.lineTo(x + Math.cos(aR) * edge, y + Math.sin(aR) * edge);
+        ctx.strokeStyle = '#bbb';
+        ctx.lineWidth = 0.7 * s;
+        ctx.stroke();
+      }
+
       if (selected) {
         ctx.strokeStyle = HIGHLIGHT;
         ctx.lineWidth = 2;
