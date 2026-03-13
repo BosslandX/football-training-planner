@@ -21,7 +21,8 @@ export function FieldCanvas() {
   const scaleRef = useRef(1);
   const offsetRef = useRef({ x: 0, y: 0 });
   const contextMenuRef = useRef<{ x: number; y: number } | null>(null);
-  const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null);
+  const pinchRef = useRef<{ startDist: number; startZoom: number; lastMidX: number; lastMidY: number } | null>(null);
+  const panRef = useRef<{ lastX: number; lastY: number } | null>(null);
 
   const store = useStore();
 
@@ -363,7 +364,7 @@ export function FieldCanvas() {
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
-    // Pinch-to-zoom: two fingers
+    // Pinch-to-zoom + two-finger pan
     if (e.touches.length === 2) {
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -371,12 +372,13 @@ export function FieldCanvas() {
       pinchRef.current = {
         startDist: Math.sqrt(dx * dx + dy * dy),
         startZoom: useStore.getState().zoom,
+        lastMidX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        lastMidY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
       };
       return;
     }
     if (e.touches.length !== 1) return;
     pinchRef.current = null;
-    e.preventDefault();
     const pos = getTouchPos(e);
     if (!pos) return;
     const fp = canvasToField(pos.x, pos.y);
@@ -388,6 +390,7 @@ export function FieldCanvas() {
 
     if (s.mode === 'select') {
       if (s.placementType) {
+        e.preventDefault();
         s.saveUndo();
         const playerCount = s.elements.filter(el => el.type.startsWith('player')).length;
         s.addElement({
@@ -403,14 +406,18 @@ export function FieldCanvas() {
       // Larger hit radius for touch (1.8x)
       const hit = hitTestElement(s.elements, fp.x, fp.y, undefined, undefined, 1.8);
       if (hit) {
+        e.preventDefault(); // prevent scroll — we're dragging an element
         s.setSelected(hit.id);
         dragRef.current = { id: hit.id, offsetX: fp.x - hit.x, offsetY: fp.y - hit.y };
       } else {
+        // No hit → enter pan mode (scroll the canvas wrapper)
         s.setSelected(null);
+        const touch = e.touches[0];
+        panRef.current = { lastX: touch.clientX, lastY: touch.clientY };
       }
     } else if (['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      e.preventDefault(); // prevent scroll in drawing modes
       if (drawRef.current.clickPlaced && drawRef.current.start) {
-        // Second touch after first tap → finalize handled in onTouchEnd
         drawRef.current.end = fp;
       } else {
         drawRef.current = { start: fp, end: null, points: [], dragged: false, clickPlaced: false };
@@ -419,30 +426,54 @@ export function FieldCanvas() {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    // Pinch-to-zoom
+    // Pinch-to-zoom + two-finger pan
     if (e.touches.length === 2 && pinchRef.current) {
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const ratio = dist / pinchRef.current.startDist;
-      const newZoom = Math.round(pinchRef.current.startZoom * ratio * 4) / 4; // snap to 0.25
+      const newZoom = Math.round(pinchRef.current.startZoom * ratio * 4) / 4;
       useStore.getState().setZoom(newZoom);
+
+      // Pan: scroll the wrapper by the delta of the midpoint
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const wrapper = wrapperRef.current;
+      if (wrapper) {
+        wrapper.scrollLeft -= (midX - pinchRef.current.lastMidX);
+        wrapper.scrollTop -= (midY - pinchRef.current.lastMidY);
+      }
+      pinchRef.current.lastMidX = midX;
+      pinchRef.current.lastMidY = midY;
       return;
     }
     if (e.touches.length !== 1) return;
-    e.preventDefault();
     const pos = getTouchPos(e);
     if (!pos) return;
     const fp = canvasToField(pos.x, pos.y);
     const s = useStore.getState();
 
+    if (panRef.current) {
+      // Pan mode: scroll the canvas wrapper
+      const touch = e.touches[0];
+      const wrapper = wrapperRef.current;
+      if (wrapper) {
+        wrapper.scrollLeft -= (touch.clientX - panRef.current.lastX);
+        wrapper.scrollTop -= (touch.clientY - panRef.current.lastY);
+      }
+      panRef.current = { lastX: touch.clientX, lastY: touch.clientY };
+      return;
+    }
+
     if (dragRef.current) {
+      e.preventDefault();
       s.updateElement(dragRef.current.id, {
         x: fp.x - dragRef.current.offsetX,
         y: fp.y - dragRef.current.offsetY,
       });
     } else if (drawRef.current.start && ['arrow', 'dashed', 'curved', 'zone'].includes(s.mode)) {
+      e.preventDefault();
       drawRef.current.end = fp;
       drawRef.current.dragged = true;
       render();
@@ -450,11 +481,15 @@ export function FieldCanvas() {
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
     if (pinchRef.current) {
       pinchRef.current = null;
       return;
     }
+    if (panRef.current) {
+      panRef.current = null;
+      return;
+    }
+    e.preventDefault();
     const s = useStore.getState();
 
     if (dragRef.current) {
