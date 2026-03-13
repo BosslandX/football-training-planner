@@ -13,11 +13,9 @@ export async function generateAnimationFrames(data: VideoExportData): Promise<Bu
   const totalFrames = Math.ceil(animDuration * fps);
   const frameDelay = 1000 / fps;
   const isHalf = fieldType.includes('half');
-  const isLand = fieldType.includes('land') || fieldType.includes('indoor');
-  const isIndoor = fieldType.includes('indoor');
+  const isLand = fieldType.includes('land');
   let canvasW: number, canvasH: number;
-  if (isIndoor) { canvasW = 960; canvasH = 480; }
-  else if (isLand && isHalf) { canvasW = 510; canvasH = 680; }
+  if (isLand && isHalf) { canvasW = 510; canvasH = 680; }
   else if (isLand) { canvasW = 1020; canvasH = 680; }
   else if (isHalf) { canvasW = 680; canvasH = 510; }
   else { canvasW = 680; canvasH = 1020; }
@@ -53,8 +51,7 @@ function buildAnimationHtml(
 ): string {
   const isGreen = fieldType.includes('green');
   const isHalf = fieldType.includes('half');
-  const isLand = fieldType.includes('land') || fieldType.includes('indoor');
-  const isIndoor = fieldType.includes('indoor');
+  const isLand = fieldType.includes('land');
 
   return `<!DOCTYPE html>
 <html>
@@ -270,7 +267,6 @@ function buildAnimationHtml(
     const isGreen = ${isGreen};
     const isHalf = ${isHalf};
     const isLand = ${isLand};
-    const isIndoor = ${isIndoor};
     const w = ${canvasW}, h = ${canvasH};
 
     function interpolate(el, t) {
@@ -313,17 +309,7 @@ function buildAnimationHtml(
       ctx.strokeStyle = lc; ctx.fillStyle = lc; ctx.lineWidth = 2;
       ctx.strokeRect(0, 0, w, h);
 
-      if (isIndoor) {
-        ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
-        ctx.beginPath(); ctx.arc(w/2, h/2, 50, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(w/2, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(0, h/2, 90, -Math.PI/2, Math.PI/2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(w, h/2, 90, Math.PI/2, Math.PI*1.5); ctx.stroke();
-        ctx.beginPath(); ctx.arc(72, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(w-72, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(130, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(w-130, h/2, 3, 0, Math.PI*2); ctx.fill();
-      } else if (isLand) {
+      if (isLand) {
         if (!isHalf) { ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke(); }
         const cx2 = isHalf ? w : w/2;
         ctx.beginPath(); ctx.arc(cx2, h/2, 60, isHalf ? Math.PI/2 : 0, isHalf ? Math.PI*1.5 : Math.PI*2); ctx.stroke();
@@ -387,8 +373,12 @@ function buildAnimationHtml(
       }
     }
 
-    function drawDrawings() {
+    function drawDrawings(t) {
       drawings.forEach(d => {
+        const st = d.startTime != null ? d.startTime : 0;
+        const et = d.endTime != null ? d.endTime : -1;
+        if (t < st) return;
+        if (et >= 0 && t > et) return;
         ctx.strokeStyle = d.color || '#fff';
         ctx.fillStyle = d.color || '#fff';
         ctx.lineWidth = d.width || 2.5;
@@ -417,7 +407,7 @@ function buildAnimationHtml(
     function renderFrame(t) {
       ctx.clearRect(0, 0, w, h);
       drawField();
-      drawDrawings();
+      drawDrawings(t);
       elements.forEach(el => {
         const st = el.startTime != null ? el.startTime : 0;
         const et = el.endTime != null ? el.endTime : -1;

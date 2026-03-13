@@ -213,8 +213,9 @@ export const useStore = create<AppState>((set, get) => ({
 
   addDrawing: (d) => {
     const id = get().nextId;
+    const defaults = { startTime: d.startTime ?? get().animTime, endTime: d.endTime ?? -1 };
     set(s => ({
-      drawings: [...s.drawings, { ...d, id } as Drawing],
+      drawings: [...s.drawings, { ...d, ...defaults, id } as Drawing],
       nextId: s.nextId + 1,
     }));
   },

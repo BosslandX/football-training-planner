@@ -6,7 +6,6 @@ import { encodeGif } from '../utils/gifEncoder';
 const FIELD_TYPES: FieldType[] = [
   'full-green', 'full-white', 'half-green', 'half-white',
   'full-green-land', 'full-white-land', 'half-green-land', 'half-white-land',
-  'indoor-green', 'indoor-white',
 ];
 
 

@@ -10,8 +10,7 @@ export type ToolMode = 'select' | DrawingType;
 
 export type FieldType =
   | 'full-green' | 'full-white' | 'half-green' | 'half-white'
-  | 'full-green-land' | 'full-white-land' | 'half-green-land' | 'half-white-land'
-  | 'indoor-green' | 'indoor-white';
+  | 'full-green-land' | 'full-white-land' | 'half-green-land' | 'half-white-land';
 
 export interface Keyframe {
   t: number;
@@ -47,6 +46,8 @@ export interface Drawing {
   points?: { x: number; y: number }[];
   text?: string;
   label?: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 export interface Phase {

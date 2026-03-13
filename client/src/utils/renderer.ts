@@ -19,7 +19,6 @@ interface RenderConfig {
 }
 
 export function getFieldDimensions(fieldType: FieldType): { w: number; h: number } {
-  if (fieldType.includes('indoor')) return { w: 960, h: 480 };
   const isLand = fieldType.includes('land');
   const isHalf = fieldType.includes('half');
   if (isLand && isHalf) return { w: 510, h: 680 };
@@ -155,68 +154,13 @@ function drawFieldLandscape(ctx: CanvasRenderingContext2D, ox: number, oy: numbe
   }
 }
 
-function drawFieldIndoor(ctx: CanvasRenderingContext2D, ox: number, oy: number, w: number, h: number, s: number) {
-  ctx.strokeRect(ox, oy, w, h);
-
-  // Half line (vertical)
-  ctx.beginPath();
-  ctx.moveTo(ox + w / 2, oy);
-  ctx.lineTo(ox + w / 2, oy + h);
-  ctx.stroke();
-
-  // Center circle (smaller)
-  ctx.beginPath();
-  ctx.arc(ox + w / 2, oy + h / 2, 50 * s, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(ox + w / 2, oy + h / 2, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-
-  // D-shaped penalty areas (semicircles)
-  const dRadius = 90 * s;
-  // Left D
-  ctx.beginPath();
-  ctx.arc(ox, oy + h / 2, dRadius, -Math.PI / 2, Math.PI / 2);
-  ctx.stroke();
-  // Right D
-  ctx.beginPath();
-  ctx.arc(ox + w, oy + h / 2, dRadius, Math.PI / 2, Math.PI * 1.5);
-  ctx.stroke();
-
-  // Penalty dots
-  // First penalty dot (72px from goal line)
-  ctx.beginPath();
-  ctx.arc(ox + 72 * s, oy + h / 2, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(ox + w - 72 * s, oy + h / 2, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-  // Second penalty dot (130px from goal line)
-  ctx.beginPath();
-  ctx.arc(ox + 130 * s, oy + h / 2, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(ox + w - 130 * s, oy + h / 2, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Corner arcs (small quarter circles)
-  const cr = 6 * s;
-  ([[ox, oy, 0, Math.PI / 2], [ox + w, oy, Math.PI / 2, Math.PI],
-    [ox, oy + h, -Math.PI / 2, 0], [ox + w, oy + h, Math.PI, Math.PI * 1.5]] as [number, number, number, number][]).forEach(([cx, cy, sa, ea]) => {
-    ctx.beginPath();
-    ctx.arc(cx, cy, cr, sa, ea);
-    ctx.stroke();
-  });
-}
-
 export function drawField(ctx: CanvasRenderingContext2D, cfg: RenderConfig) {
   const { scale: s, offsetX: ox, offsetY: oy, fieldW, fieldH, fieldType, showGrid } = cfg;
   const w = fieldW * s;
   const h = fieldH * s;
   const isGreen = fieldType.includes('green');
   const isHalf = fieldType.includes('half');
-  const isLand = fieldType.includes('land') || fieldType.includes('indoor');
-  const isIndoor = fieldType.includes('indoor');
+  const isLand = fieldType.includes('land');
 
   // Background
   ctx.fillStyle = '#1a472a';
@@ -248,9 +192,7 @@ export function drawField(ctx: CanvasRenderingContext2D, cfg: RenderConfig) {
   ctx.fillStyle = lineColor;
   ctx.lineWidth = 2 * s;
 
-  if (isIndoor) {
-    drawFieldIndoor(ctx, ox, oy, w, h, s);
-  } else if (isLand) {
+  if (isLand) {
     drawFieldLandscape(ctx, ox, oy, w, h, s, isHalf);
   } else {
     drawFieldPortrait(ctx, ox, oy, w, h, s, isGreen, isHalf);

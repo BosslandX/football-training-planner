@@ -74,13 +74,29 @@ export function FieldCanvas() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawField(ctx, cfg);
-    s.drawings.forEach(d => drawDrawing(ctx, d, cfg));
+    // Drawings with timeline visibility
+    s.drawings.forEach(d => {
+      const st = d.startTime ?? 0;
+      const et = d.endTime ?? -1;
+      const before = s.animTime < st;
+      const after = et >= 0 && s.animTime > et;
+      if (s.animPlaying && (before || after)) return;
+      if (!s.animPlaying && (before || after)) {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        drawDrawing(ctx, d, cfg);
+        ctx.restore();
+        return;
+      }
+      drawDrawing(ctx, d, cfg);
+    });
+    // Elements with timeline visibility
     s.elements.forEach(el => {
       const st = el.startTime ?? 0;
       const et = el.endTime ?? -1;
       const before = s.animTime < st;
       const after = et >= 0 && s.animTime > et;
-      if (s.animPlaying && (before || after)) return; // hide during playback
+      if (s.animPlaying && (before || after)) return;
       if (!s.animPlaying && (before || after)) {
         ctx.save();
         ctx.globalAlpha = 0.2;

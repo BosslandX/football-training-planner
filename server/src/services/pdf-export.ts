@@ -47,7 +47,6 @@ export async function generatePDF(exercises: ExerciseData[]): Promise<Buffer> {
 }
 
 function getCanvasDimensions(fieldType: string): { canvasWidth: number; canvasHeight: number } {
-  if (fieldType.includes('indoor')) return { canvasWidth: 960, canvasHeight: 480 };
   const isLand = fieldType.includes('land');
   const isHalf = fieldType.includes('half');
   if (isLand && isHalf) return { canvasWidth: 510, canvasHeight: 680 };
@@ -100,8 +99,7 @@ function buildMultiPageHtml(exercises: ExerciseData[]): string {
       const h = canvas.height;
       const isGreen = fieldType.includes('green');
       const isHalf = fieldType.includes('half');
-      const isLand = fieldType.includes('land') || fieldType.includes('indoor');
-      const isIndoor = fieldType.includes('indoor');
+      const isLand = fieldType.includes('land');
 
       // Grass
       if (isGreen) {
@@ -130,24 +128,7 @@ function buildMultiPageHtml(exercises: ExerciseData[]): string {
 
       ctx.strokeRect(0, 0, w, h);
 
-      if (isIndoor) {
-        // Indoor/Futsal field
-        ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
-        ctx.beginPath(); ctx.arc(w/2, h/2, 50, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(w/2, h/2, 3, 0, Math.PI*2); ctx.fill();
-        // D-shaped penalty areas
-        ctx.beginPath(); ctx.arc(0, h/2, 90, -Math.PI/2, Math.PI/2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(w, h/2, 90, Math.PI/2, Math.PI*1.5); ctx.stroke();
-        // Penalty dots
-        ctx.beginPath(); ctx.arc(72, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(w-72, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(130, h/2, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(w-130, h/2, 3, 0, Math.PI*2); ctx.fill();
-        // Corner arcs
-        [[0,0,0,Math.PI/2],[w,0,Math.PI/2,Math.PI],[0,h,-Math.PI/2,0],[w,h,Math.PI,Math.PI*1.5]].forEach(([cx,cy,sa,ea]) => {
-          ctx.beginPath(); ctx.arc(cx,cy,6,sa,ea); ctx.stroke();
-        });
-      } else if (isLand) {
+      if (isLand) {
         // Landscape field
         if (!isHalf) {
           ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
