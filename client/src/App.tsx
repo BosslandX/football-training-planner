@@ -7,6 +7,8 @@ import { FieldCanvas } from './components/FieldCanvas';
 import { AnimationBar } from './components/AnimationBar';
 import { ConceptPanel } from './components/ConceptPanel';
 import { MobileNav } from './components/MobileNav';
+import { CookieBanner } from './components/CookieBanner';
+import { LegalOverlay } from './components/LegalOverlay';
 import './styles.css';
 
 export default function App() {
@@ -76,6 +78,21 @@ export default function App() {
       </div>
 
       {!embedded && <MobileNav />}
+
+      {!embedded && (
+        <footer className="app-footer">
+          <button className="footer-link" onClick={() => {
+            window.dispatchEvent(new CustomEvent('show-legal', { detail: 'impressum' }));
+          }}>Impressum</button>
+          <span className="footer-sep">|</span>
+          <button className="footer-link" onClick={() => {
+            window.dispatchEvent(new CustomEvent('show-legal', { detail: 'datenschutz' }));
+          }}>Datenschutz</button>
+        </footer>
+      )}
+
+      <CookieBanner />
+      <LegalOverlay />
     </div>
   );
 }
