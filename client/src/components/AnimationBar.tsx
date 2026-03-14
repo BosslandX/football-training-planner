@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
+import { t, useLocale } from '../i18n';
 
 export function AnimationBar() {
+  useLocale(s => s.locale);
   const { animTime, animDuration, animSpeed, animPlaying, setAnimTime, setAnimDuration, setAnimSpeed, setAnimPlaying, interpolateElements, elements } = useStore();
   const rafRef = useRef<number>(0);
   const lastTsRef = useRef<number | null>(null);
@@ -129,9 +131,9 @@ export function AnimationBar() {
   const seekTimeline = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const p = (e.clientX - rect.left) / rect.width;
-    const t = p * animDuration;
-    setAnimTime(t);
-    interpolateElements(t);
+    const time = p * animDuration;
+    setAnimTime(time);
+    interpolateElements(time);
   };
 
   const progress = (animTime / animDuration) * 100;
@@ -144,13 +146,13 @@ export function AnimationBar() {
 
   return (
     <div className="anim-bar">
-      <button className="anim-btn" onClick={rewind} title="Zurück">⏮</button>
-      <button className="anim-btn" onClick={() => animPlaying ? stop() : play()} title={animPlaying ? 'Pause' : 'Abspielen'}>
+      <button className="anim-btn" onClick={rewind} title={t('anim.rewind')}>⏮</button>
+      <button className="anim-btn" onClick={() => animPlaying ? stop() : play()} title={animPlaying ? t('anim.pause') : t('anim.play')}>
         {animPlaying ? '⏸' : '▶'}
       </button>
-      <button className="anim-btn" onClick={() => { stop(); rewind(); }} title="Stop">⏹</button>
-      <button className="anim-btn" onClick={() => step(-0.25)} title="Schritt zurück">⏪</button>
-      <button className="anim-btn" onClick={() => step(0.25)} title="Schritt vor">⏩</button>
+      <button className="anim-btn" onClick={() => { stop(); rewind(); }} title={t('anim.stop')}>⏹</button>
+      <button className="anim-btn" onClick={() => step(-0.25)} title={t('anim.stepBack')}>⏪</button>
+      <button className="anim-btn" onClick={() => step(0.25)} title={t('anim.stepForward')}>⏩</button>
 
       <div className="timeline-container" onClick={seekTimeline}>
         <div className="timeline-progress" style={{ width: `${progress}%` }} />
@@ -170,7 +172,7 @@ export function AnimationBar() {
       <div className="anim-time">{animTime.toFixed(1)}s / {animDuration.toFixed(1)}s</div>
 
       <div>
-        <span className="anim-label">Dauer </span>
+        <span className="anim-label">{t('anim.duration')} </span>
         <input
           type="number"
           className="anim-input"
@@ -184,7 +186,7 @@ export function AnimationBar() {
       </div>
 
       <div>
-        <span className="anim-label">Speed </span>
+        <span className="anim-label">{t('anim.speed')} </span>
         <select
           className="anim-input"
           style={{ width: 60 }}

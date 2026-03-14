@@ -9,9 +9,11 @@ import { ConceptPanel } from './components/ConceptPanel';
 import { MobileNav } from './components/MobileNav';
 import { CookieBanner } from './components/CookieBanner';
 import { LegalOverlay } from './components/LegalOverlay';
+import { t, useLocale } from './i18n';
 import './styles.css';
 
 export default function App() {
+  useLocale(s => s.locale);
   const mobileDrawer = useStore(s => s.mobileDrawer);
   const setMobileDrawer = useStore(s => s.setMobileDrawer);
   const loadedRef = useRef(false);
@@ -83,11 +85,11 @@ export default function App() {
         <footer className="app-footer">
           <button className="footer-link" onClick={() => {
             window.dispatchEvent(new CustomEvent('show-legal', { detail: 'impressum' }));
-          }}>Impressum</button>
+          }}>{t('app.impressum')}</button>
           <span className="footer-sep">|</span>
           <button className="footer-link" onClick={() => {
             window.dispatchEvent(new CustomEvent('show-legal', { detail: 'datenschutz' }));
-          }}>Datenschutz</button>
+          }}>{t('app.datenschutz')}</button>
         </footer>
       )}
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { t, useLocale } from '../i18n';
 
 const COOKIE_KEY = 'cookie_consent';
 
 export function CookieBanner() {
+  useLocale(s => s.locale);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -21,12 +23,12 @@ export function CookieBanner() {
   return (
     <div className="cookie-banner">
       <span>
-        Diese Website verwendet Cookies für grundlegende Funktionen.{' '}
+        {t('cookie.message')}{' '}
         <button className="cookie-link" onClick={() => {
           window.dispatchEvent(new CustomEvent('show-legal', { detail: 'datenschutz' }));
-        }}>Mehr erfahren</button>
+        }}>{t('cookie.learnMore')}</button>
       </span>
-      <button className="cookie-accept" onClick={accept}>OK</button>
+      <button className="cookie-accept" onClick={accept}>{t('cookie.accept')}</button>
     </div>
   );
 }

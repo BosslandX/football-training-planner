@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { TEAM_COLORS, DRAW_COLORS } from '../types';
 import type { ElementType, ToolMode } from '../types';
 import { getPlayerSvg, type PlayerPose } from '../utils/playerSvg';
+import { t, useLocale } from '../i18n';
 
 const POSE_MAP: Partial<Record<ElementType, PlayerPose>> = {
   'player-run': 'run',
@@ -15,40 +16,40 @@ const POSE_MAP: Partial<Record<ElementType, PlayerPose>> = {
 interface ToolDef {
   type: ElementType;
   icon: string;
-  label: string;
+  labelKey: string;
 }
 
 const PLAYER_TOOLS: ToolDef[] = [
-  { type: 'player-run', icon: '🏃', label: 'Laufen' },
-  { type: 'player-stand', icon: '🧍', label: 'Stehen' },
-  { type: 'player-pass', icon: '⚡', label: 'Passen' },
-  { type: 'goalkeeper', icon: '🧤', label: 'Torwart' },
-  { type: 'trainer', icon: '👨‍🏫', label: 'Trainer' },
-  { type: 'dummy', icon: '🧱', label: 'Dummy' },
+  { type: 'player-run', icon: '🏃', labelKey: 'tools.playerRun' },
+  { type: 'player-stand', icon: '🧍', labelKey: 'tools.playerStand' },
+  { type: 'player-pass', icon: '⚡', labelKey: 'tools.playerPass' },
+  { type: 'goalkeeper', icon: '🧤', labelKey: 'tools.goalkeeper' },
+  { type: 'trainer', icon: '👨‍🏫', labelKey: 'tools.trainer' },
+  { type: 'dummy', icon: '🧱', labelKey: 'tools.dummy' },
 ];
 
 const EQUIPMENT_TOOLS: ToolDef[] = [
-  { type: 'ball', icon: '⚽', label: 'Ball' },
-  { type: 'cone', icon: '🔶', label: 'Hütchen' },
-  { type: 'pole', icon: '│', label: 'Stange' },
-  { type: 'ladder', icon: '🪜', label: 'Leiter' },
-  { type: 'flag', icon: '🚩', label: 'Flagge' },
-  { type: 'ring', icon: '⭕', label: 'Ring' },
+  { type: 'ball', icon: '⚽', labelKey: 'tools.ball' },
+  { type: 'cone', icon: '🔶', labelKey: 'tools.cone' },
+  { type: 'pole', icon: '│', labelKey: 'tools.pole' },
+  { type: 'ladder', icon: '🪜', labelKey: 'tools.ladder' },
+  { type: 'flag', icon: '🚩', labelKey: 'tools.flag' },
+  { type: 'ring', icon: '⭕', labelKey: 'tools.ring' },
 ];
 
 const GOAL_TOOLS: ToolDef[] = [
-  { type: 'goal-large', icon: '🥅', label: 'Großtor' },
-  { type: 'goal-small', icon: '⊓', label: 'Minitor' },
-  { type: 'goal-cone', icon: '⋮⋮', label: 'Hütchentor' },
+  { type: 'goal-large', icon: '🥅', labelKey: 'tools.goalLarge' },
+  { type: 'goal-small', icon: '⊓', labelKey: 'tools.goalSmall' },
+  { type: 'goal-cone', icon: '⋮⋮', labelKey: 'tools.goalCone' },
 ];
 
-const DRAW_TOOLS: { mode: ToolMode; label: string }[] = [
-  { mode: 'select', label: '⊹ Auswahl' },
-  { mode: 'arrow', label: '→ Schuss/Pass' },
-  { mode: 'dashed', label: '┅ Laufweg' },
-  { mode: 'curved', label: '↝ Dribbling' },
-  { mode: 'zone', label: '▭ Zone' },
-  { mode: 'text', label: 'T Text' },
+const DRAW_TOOL_DEFS: { mode: ToolMode; icon: string; labelKey: string }[] = [
+  { mode: 'select', icon: '⊹', labelKey: 'tools.select' },
+  { mode: 'arrow', icon: '→', labelKey: 'tools.arrow' },
+  { mode: 'dashed', icon: '┅', labelKey: 'tools.dashed' },
+  { mode: 'curved', icon: '↝', labelKey: 'tools.curved' },
+  { mode: 'zone', icon: '▭', labelKey: 'tools.zone' },
+  { mode: 'text', icon: 'T', labelKey: 'tools.text' },
 ];
 
 function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -80,25 +81,25 @@ function ToolGrid({ tools }: { tools: ToolDef[] }) {
 
   return (
     <div className="tool-grid">
-      {tools.map(t => {
-        const hasSvg = !!POSE_MAP[t.type];
-        const isActive = placementType === t.type;
+      {tools.map(tool => {
+        const hasSvg = !!POSE_MAP[tool.type];
+        const isActive = placementType === tool.type;
 
         return (
           <div
-            key={t.type}
+            key={tool.type}
             className={`tool-item${isActive ? ' active' : ''}`}
             draggable
             onDragStart={e => {
-              e.dataTransfer.setData('elementType', t.type);
+              e.dataTransfer.setData('elementType', tool.type);
               setPlacementType(null);
             }}
-            onClick={() => setPlacementType(isActive ? null : t.type)}
+            onClick={() => setPlacementType(isActive ? null : tool.type)}
           >
             <div className="icon">
-              {hasSvg ? <PlayerIcon type={t.type} color={selectedColor} /> : t.icon}
+              {hasSvg ? <PlayerIcon type={tool.type} color={selectedColor} /> : tool.icon}
             </div>
-            {t.label}
+            {t(tool.labelKey)}
           </div>
         );
       })}
@@ -107,20 +108,21 @@ function ToolGrid({ tools }: { tools: ToolDef[] }) {
 }
 
 export function Sidebar() {
+  useLocale(s => s.locale);
   const { selectedColor, setSelectedColor, drawColor, setDrawColor, mode, setMode, selectedId, elements, addKeyframe, clearKeyframes, animTime, mobileDrawer } = useStore();
 
   const selectedEl = elements.find(e => e.id === selectedId);
 
   return (
     <div className={`sidebar ${mobileDrawer === 'sidebar' ? 'open' : ''}`}>
-      <Section title="Teamfarbe">
+      <Section title={t('sidebar.teamColor')}>
         <div className="color-row">
           {TEAM_COLORS.map(c => (
             <div
               key={c.value}
               className={`color-swatch ${selectedColor === c.value ? 'active' : ''}`}
               style={{ background: c.value }}
-              title={c.name}
+              title={t(c.nameKey)}
               onClick={() => {
                 setSelectedColor(c.value);
                 if (selectedEl && (selectedEl.type.startsWith('player') || selectedEl.type === 'goalkeeper' || selectedEl.type === 'trainer')) {
@@ -132,30 +134,30 @@ export function Sidebar() {
         </div>
       </Section>
 
-      <Section title="Spieler">
+      <Section title={t('sidebar.players')}>
         <ToolGrid tools={PLAYER_TOOLS} />
       </Section>
 
-      <Section title="Ausrüstung">
+      <Section title={t('sidebar.equipment')}>
         <ToolGrid tools={EQUIPMENT_TOOLS} />
       </Section>
 
-      <Section title="Tore">
+      <Section title={t('sidebar.goals')}>
         <ToolGrid tools={GOAL_TOOLS} />
       </Section>
 
-      <Section title="Zeichnen">
+      <Section title={t('sidebar.drawing')}>
         <div className="draw-tools">
-          {DRAW_TOOLS.map(d => (
+          {DRAW_TOOL_DEFS.map(d => (
             <button
               key={d.mode}
               className={`draw-btn ${mode === d.mode ? 'active' : ''}`}
               onClick={() => setMode(d.mode)}
-            >{d.label}</button>
+            >{d.icon} {t(d.labelKey)}</button>
           ))}
         </div>
         <div style={{ marginTop: 8 }}>
-          <label style={{ fontSize: 11, color: 'var(--text-dim)' }}>Linienfarbe</label>
+          <label style={{ fontSize: 11, color: 'var(--text-dim)' }}>{t('sidebar.lineColor')}</label>
           <div className="color-row">
             {DRAW_COLORS.map(c => (
               <div
@@ -169,9 +171,9 @@ export function Sidebar() {
         </div>
       </Section>
 
-      <Section title="Animation">
+      <Section title={t('sidebar.animation')}>
         <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 8 }}>
-          Wähle ein Element, positioniere es und füge Keyframes hinzu.
+          {t('sidebar.animHint')}
         </div>
         <button
           className="add-btn"
@@ -185,13 +187,13 @@ export function Sidebar() {
             }
           }}
           disabled={!selectedId}
-        >+ Keyframe hinzufügen</button>
+        >{t('sidebar.addKeyframe')}</button>
         <div style={{ marginTop: 8 }}>
           <button
             className="add-btn danger"
             onClick={() => selectedId && clearKeyframes(selectedId)}
             disabled={!selectedId}
-          >Keyframes löschen</button>
+          >{t('sidebar.clearKeyframes')}</button>
         </div>
         {selectedEl && selectedEl.keyframes.length > 0 && (
           <div style={{ marginTop: 10, fontSize: 12 }}>

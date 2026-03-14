@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
+import { t, useLocale } from '../i18n';
 
 export function ContextMenu() {
+  useLocale(s => s.locale);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const { selectedId, saveUndo, duplicateElement, removeElement, bringToFront, sendToBack, addKeyframe, clearKeyframes, elements, animTime } = useStore();
 
@@ -34,27 +36,27 @@ export function ContextMenu() {
   return (
     <div className="context-menu" style={{ left: pos.x, top: pos.y }}>
       <div className="context-item" onClick={() => action(() => { saveUndo(); duplicateElement(selectedId); })}>
-        📋 Duplizieren
+        📋 {t('context.duplicate')}
       </div>
       <div className="context-item" onClick={() => action(() => { saveUndo(); removeElement(selectedId); })}>
-        🗑️ Löschen
+        🗑️ {t('context.delete')}
       </div>
       <div className="context-separator" />
       <div className="context-item" onClick={() => action(() => bringToFront(selectedId))}>
-        ⬆ Nach vorne
+        ⬆ {t('context.bringToFront')}
       </div>
       <div className="context-item" onClick={() => action(() => sendToBack(selectedId))}>
-        ⬇ Nach hinten
+        ⬇ {t('context.sendToBack')}
       </div>
       <div className="context-separator" />
       <div className="context-item" onClick={() => action(() => {
         saveUndo();
         addKeyframe(selectedId, { t: animTime, x: el.x, y: el.y, rotation: el.rotation });
       })}>
-        🎬 Keyframe hier
+        🎬 {t('context.keyframeHere')}
       </div>
       <div className="context-item" onClick={() => action(() => clearKeyframes(selectedId))}>
-        ❌ Keyframes löschen
+        ❌ {t('context.clearKeyframes')}
       </div>
     </div>
   );

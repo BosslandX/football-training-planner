@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
+import { t, useLocale } from '../i18n';
 
 interface SessionSummary {
   id: number;
@@ -12,13 +13,17 @@ interface SessionSummary {
   drill_count: number;
 }
 
-const INTENSITY_LABELS: Record<string, string> = {
-  low: 'Niedrig',
-  medium: 'Mittel',
-  high: 'Hoch',
-};
+function getIntensityLabel(level: string): string {
+  const map: Record<string, string> = {
+    low: 'sessions.intensityLow',
+    medium: 'sessions.intensityMedium',
+    high: 'sessions.intensityHigh',
+  };
+  return t(map[level] ?? level);
+}
 
 export function SessionBrowser({ onClose }: { onClose: () => void }) {
+  useLocale(s => s.locale);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState<number | null>(null);
@@ -43,7 +48,7 @@ export function SessionBrowser({ onClose }: { onClose: () => void }) {
   const handleImport = useCallback(async (sessionId: number) => {
     const state = useStore.getState();
     const hasContent = state.elements.length > 0 || state.exercises.length > 1;
-    if (hasContent && !confirm('Alle aktuellen Uebungen werden ersetzt. Fortfahren?')) {
+    if (hasContent && !confirm(t('sessions.confirmReplace'))) {
       return;
     }
 
@@ -52,14 +57,14 @@ export function SessionBrowser({ onClose }: { onClose: () => void }) {
       const resp = await fetch(`/api/sessions/${sessionId}`);
       if (!resp.ok) {
         const err = await resp.json();
-        alert(`Import fehlgeschlagen: ${err.error || 'Unbekannter Fehler'}`);
+        alert(t('sessions.importFailed', { error: err.error || t('sessions.importFailedUnknown') }));
         return;
       }
       const data = await resp.json();
       state.importTrainingPlan(data);
       onClose();
     } catch {
-      alert('Import fehlgeschlagen: Server nicht erreichbar');
+      alert(t('sessions.importFailedServer'));
     } finally {
       setImporting(null);
     }
@@ -78,15 +83,15 @@ export function SessionBrowser({ onClose }: { onClose: () => void }) {
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={headerStyle}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>Trainingseinheiten</h2>
+          <h2 style={{ margin: 0, fontSize: 18 }}>{t('sessions.title')}</h2>
           <button style={closeBtnStyle} onClick={onClose}>X</button>
         </div>
 
-        {loading && <p style={msgStyle}>Lade Sessions...</p>}
-        {error && <p style={{ ...msgStyle, color: '#e74c3c' }}>Fehler: {error}</p>}
+        {loading && <p style={msgStyle}>{t('sessions.loading')}</p>}
+        {error && <p style={{ ...msgStyle, color: '#e74c3c' }}>{t('sessions.error', { error })}</p>}
 
         {!loading && !error && sessions.length === 0 && (
-          <p style={msgStyle}>Keine Sessions vorhanden.</p>
+          <p style={msgStyle}>{t('sessions.empty')}</p>
         )}
 
         {!loading && !error && sessions.length > 0 && (
@@ -98,7 +103,7 @@ export function SessionBrowser({ onClose }: { onClose: () => void }) {
                     #{s.id} {s.topic_de}
                   </div>
                   <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
-                    {s.age_name} &middot; {INTENSITY_LABELS[s.intensity_level] || s.intensity_level} &middot; {s.total_duration_min} min &middot; {s.drill_count} Uebungen
+                    {s.age_name} &middot; {getIntensityLabel(s.intensity_level)} &middot; {s.total_duration_min} min &middot; {s.drill_count} {t('sessions.drills')}
                   </div>
                 </div>
                 <button
@@ -106,7 +111,7 @@ export function SessionBrowser({ onClose }: { onClose: () => void }) {
                   onClick={() => handleImport(s.id)}
                   disabled={importing !== null}
                 >
-                  {importing === s.id ? '...' : 'Laden'}
+                  {importing === s.id ? '...' : t('sessions.load')}
                 </button>
               </div>
             ))}

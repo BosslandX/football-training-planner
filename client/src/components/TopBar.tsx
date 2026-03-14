@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import type { FieldType } from '../types';
 import { encodeGif } from '../utils/gifEncoder';
+import { t, useLocale } from '../i18n';
 
 const FIELD_TYPES: FieldType[] = [
   'full-green', 'full-white', 'half-green', 'half-white',
@@ -10,7 +11,9 @@ const FIELD_TYPES: FieldType[] = [
 
 
 export function TopBar() {
+  useLocale(s => s.locale);
   const { showGrid, toggleGrid, fieldType, setFieldType, toggleConcept, showConcept, undo, redo, resetAll, saveUndo, playerStyle, togglePlayerStyle, playerScale, setPlayerScale, zoom, setZoom, mobileDrawer, setMobileDrawer, setConceptTab } = useStore();
+  const toggleLang = useLocale(s => s.toggleLocale);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -39,7 +42,7 @@ export function TopBar() {
     // Confirm if current exercise has elements
     const state = useStore.getState();
     const hasContent = state.elements.length > 0 || state.exercises.length > 1;
-    if (hasContent && !confirm('Alle aktuellen Übungen werden ersetzt. Fortfahren?')) {
+    if (hasContent && !confirm(t('topbar.confirmReplace'))) {
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -54,13 +57,13 @@ export function TopBar() {
       });
       if (!resp.ok) {
         const err = await resp.json();
-        alert(`Import fehlgeschlagen: ${err.error || 'Unbekannter Fehler'}`);
+        alert(t('topbar.importFailed', { error: err.error || t('topbar.importFailedUnknown') }));
         return;
       }
       const data = await resp.json();
       useStore.getState().importTrainingPlan(data);
     } catch {
-      alert('Import fehlgeschlagen: Server nicht erreichbar');
+      alert(t('topbar.importFailedServer'));
     }
 
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -126,7 +129,7 @@ export function TopBar() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    setExportStatus('Frames aufnehmen…');
+    setExportStatus(t('topbar.capturingFrames'));
 
     // Save state and clear selection/keyframe markers for clean export
     const prevSelectedId = state.selectedId;
@@ -137,13 +140,13 @@ export function TopBar() {
     await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
     for (let i = 0; i <= totalFrames; i++) {
-      const t = (i / totalFrames) * animDuration;
-      useStore.getState().setAnimTime(t);
-      useStore.getState().interpolateElements(t);
+      const time = (i / totalFrames) * animDuration;
+      useStore.getState().setAnimTime(time);
+      useStore.getState().interpolateElements(time);
       // Wait for React re-render + canvas paint
       await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
       frames.push(ctx.getImageData(0, 0, w, h));
-      setExportStatus(`Frames aufnehmen… ${i + 1}/${totalFrames + 1}`);
+      setExportStatus(t('topbar.capturingFramesProgress', { current: i + 1, total: totalFrames + 1 }));
     }
 
     // Restore state
@@ -154,7 +157,7 @@ export function TopBar() {
     });
     useStore.getState().interpolateElements(0);
 
-    setExportStatus('GIF wird kodiert…');
+    setExportStatus(t('topbar.encodingGif'));
     // Yield to UI so the status text renders before heavy computation
     await new Promise<void>(r => setTimeout(r, 50));
 
@@ -208,7 +211,7 @@ export function TopBar() {
   };
 
   const handleReset = () => {
-    if (confirm('Alles zurücksetzen?')) {
+    if (confirm(t('topbar.confirmReset'))) {
       saveUndo();
       resetAll();
     }
@@ -221,25 +224,25 @@ export function TopBar() {
       <button
         className="topbar-btn mobile-only"
         onClick={() => setMobileDrawer(mobileDrawer === 'sidebar' ? null : 'sidebar')}
-        title="Sidebar"
+        title={t('topbar.sidebar')}
       >☰</button>
 
-      <h1>⚽ Trainingsplaner</h1>
+      <h1>⚽ {t('app.title')}</h1>
       <div className="topbar-divider desktop-only" />
       <div className="topbar-group desktop-only">
-        <button className="topbar-btn" onClick={undo} title="Rückgängig (Ctrl+Z)">↩</button>
-        <button className="topbar-btn" onClick={redo} title="Wiederholen (Ctrl+Y)">↪</button>
+        <button className="topbar-btn" onClick={undo} title={t('topbar.undo')}>↩</button>
+        <button className="topbar-btn" onClick={redo} title={t('topbar.redo')}>↪</button>
       </div>
       <div className="topbar-divider desktop-only" />
       <div className="topbar-group desktop-only">
-        <button className="topbar-btn" onClick={cycleField}>🏟️ Spielfeld</button>
-        <button className={`topbar-btn ${showGrid ? 'active' : ''}`} onClick={toggleGrid}>⊞ Raster</button>
+        <button className="topbar-btn" onClick={cycleField}>🏟️ {t('topbar.field')}</button>
+        <button className={`topbar-btn ${showGrid ? 'active' : ''}`} onClick={toggleGrid}>⊞ {t('topbar.grid')}</button>
         <button className={`topbar-btn ${playerStyle === 'figure' ? 'active' : ''}`} onClick={togglePlayerStyle}>
-          {playerStyle === 'figure' ? '👤 Figuren' : '⚪ Kreise'}
+          {playerStyle === 'figure' ? `👤 ${t('topbar.figures')}` : `⚪ ${t('topbar.circles')}`}
         </button>
-        <button className={`topbar-btn ${playerScale === 1 ? 'active' : ''}`} onClick={() => setPlayerScale(1)} title="Spieler 100%">S</button>
-        <button className={`topbar-btn ${playerScale === 2 ? 'active' : ''}`} onClick={() => setPlayerScale(2)} title="Spieler 125%">M</button>
-        <button className={`topbar-btn ${playerScale === 3 ? 'active' : ''}`} onClick={() => setPlayerScale(3)} title="Spieler 150%">L</button>
+        <button className={`topbar-btn ${playerScale === 1 ? 'active' : ''}`} onClick={() => setPlayerScale(1)} title={t('topbar.playerSize100')}>S</button>
+        <button className={`topbar-btn ${playerScale === 2 ? 'active' : ''}`} onClick={() => setPlayerScale(2)} title={t('topbar.playerSize125')}>M</button>
+        <button className={`topbar-btn ${playerScale === 3 ? 'active' : ''}`} onClick={() => setPlayerScale(3)} title={t('topbar.playerSize150')}>L</button>
       </div>
       <div className="topbar-divider desktop-only" />
       <div className="topbar-group desktop-only">
@@ -249,14 +252,15 @@ export function TopBar() {
       </div>
       <div className="topbar-spacer desktop-only" />
       <div className="topbar-group desktop-only">
-        <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={() => { setConceptTab('properties'); toggleConcept(); }}>📋 Konzeption</button>
-        <a className="topbar-btn" href="/docs/quickstart.html" target="_blank" rel="noopener">📖 Schnellstart</a>
-        <a className="topbar-btn" href="/docs/guide.html" target="_blank" rel="noopener">📚 Anleitung</a>
+        <button className={`topbar-btn ${showConcept ? 'active' : ''}`} onClick={() => { setConceptTab('properties'); toggleConcept(); }}>📋 {t('topbar.concept')}</button>
+        <a className="topbar-btn" href="/docs/quickstart.html" target="_blank" rel="noopener">📖 {t('topbar.quickstart')}</a>
+        <a className="topbar-btn" href="/docs/guide.html" target="_blank" rel="noopener">📚 {t('topbar.guide')}</a>
         <button className="topbar-btn" onClick={handleExport}>🖼️ PNG</button>
         <button className="topbar-btn" onClick={handleExportPDF}>📄 PDF</button>
         <button className="topbar-btn" onClick={handleExportGIF}>🎬 GIF</button>
         <button className="topbar-btn" onClick={handleExportVideo}>🎥 Video</button>
-        <button className="topbar-btn" onClick={handleReset}>🗑️ Reset</button>
+        <button className="topbar-btn" onClick={handleReset}>🗑️ {t('topbar.reset')}</button>
+        <button className="topbar-btn" onClick={toggleLang}>🌐 {t('topbar.langSwitch')}</button>
       </div>
 
       {/* Mobile: spacer + concept + overflow */}
@@ -264,23 +268,23 @@ export function TopBar() {
       <button
         className={`topbar-btn mobile-only ${mobileDrawer === 'concept' ? 'active' : ''}`}
         onClick={() => setMobileDrawer(mobileDrawer === 'concept' ? null : 'concept')}
-        title="Konzeption"
+        title={t('topbar.concept')}
       >📋</button>
 
       <div className="mobile-overflow-wrapper mobile-only" ref={overflowRef}>
         <button
           className="topbar-btn"
           onClick={() => setOverflowOpen(!overflowOpen)}
-          title="Mehr"
+          title={t('topbar.more')}
         >⋮</button>
         {overflowOpen && (
           <div className="mobile-overflow-menu" onClick={() => setOverflowOpen(false)}>
-            <button onClick={undo}>↩ Rückgängig</button>
-            <button onClick={redo}>↪ Wiederholen</button>
+            <button onClick={undo}>↩ {t('topbar.undo')}</button>
+            <button onClick={redo}>↪ {t('topbar.redo')}</button>
             <div className="overflow-separator" />
-            <button onClick={cycleField}>🏟️ Spielfeld</button>
-            <button onClick={toggleGrid}>{showGrid ? '⊞ Raster aus' : '⊞ Raster an'}</button>
-            <button onClick={togglePlayerStyle}>{playerStyle === 'figure' ? '⚪ Kreise' : '👤 Figuren'}</button>
+            <button onClick={cycleField}>🏟️ {t('topbar.field')}</button>
+            <button onClick={toggleGrid}>{showGrid ? `⊞ ${t('topbar.gridOff')}` : `⊞ ${t('topbar.gridOn')}`}</button>
+            <button onClick={togglePlayerStyle}>{playerStyle === 'figure' ? `⚪ ${t('topbar.circles')}` : `👤 ${t('topbar.figures')}`}</button>
             <div className="overflow-separator" />
             <button onClick={() => setZoom(zoom - 0.25)} disabled={zoom <= 0.5}>- Zoom</button>
             <span className="overflow-zoom">{Math.round(zoom * 100)}%</span>
@@ -291,7 +295,8 @@ export function TopBar() {
             <button onClick={handleExportGIF}>🎬 GIF</button>
             <button onClick={handleExportVideo}>🎥 Video</button>
             <div className="overflow-separator" />
-            <button onClick={handleReset}>🗑️ Reset</button>
+            <button onClick={handleReset}>🗑️ {t('topbar.reset')}</button>
+            <button onClick={toggleLang}>🌐 {t('topbar.langSwitch')}</button>
           </div>
         )}
       </div>

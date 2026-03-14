@@ -1,16 +1,18 @@
 import { useStore } from '../store/useStore';
 import type { ToolMode } from '../types';
-import { ELEMENT_TYPE_NAMES } from '../types';
+import { getElementTypeName } from '../types';
+import { t, useLocale } from '../i18n';
 
-const TOOLS: { mode: ToolMode; icon: string; label: string }[] = [
-  { mode: 'select', icon: '🖱️', label: 'Auswahl' },
-  { mode: 'arrow', icon: '→', label: 'Pass' },
-  { mode: 'dashed', icon: '┅', label: 'Laufweg' },
-  { mode: 'curved', icon: '↝', label: 'Dribbeln' },
-  { mode: 'zone', icon: '▭', label: 'Zone' },
+const TOOLS: { mode: ToolMode; icon: string; labelKey: string }[] = [
+  { mode: 'select', icon: '🖱️', labelKey: 'mobile.select' },
+  { mode: 'arrow', icon: '→', labelKey: 'mobile.pass' },
+  { mode: 'dashed', icon: '┅', labelKey: 'mobile.runPath' },
+  { mode: 'curved', icon: '↝', labelKey: 'mobile.dribble' },
+  { mode: 'zone', icon: '▭', labelKey: 'mobile.zone' },
 ];
 
 export function MobileNav() {
+  useLocale(s => s.locale);
   const mode = useStore(s => s.mode);
   const setMode = useStore(s => s.setMode);
   const placementType = useStore(s => s.placementType);
@@ -97,9 +99,9 @@ export function MobileNav() {
 
   const updateEndTime = (val: string) => {
     if (!mobileRecording) return;
-    const t = parseFloat(val);
-    if (!isNaN(t) && t > mobileRecording.startTime) {
-      setMobileRecording({ ...mobileRecording, endTime: t });
+    const time = parseFloat(val);
+    if (!isNaN(time) && time > mobileRecording.startTime) {
+      setMobileRecording({ ...mobileRecording, endTime: time });
     }
   };
 
@@ -109,11 +111,11 @@ export function MobileNav() {
       {mobileRecording && (
         <div className="mobile-selection-bar recording">
           <div className="selection-info">
-            Ziehe das Element zur Zielposition
+            {t('mobile.dragToTarget')}
           </div>
           <div className="recording-times">
-            <span>Von {mobileRecording.startTime.toFixed(1)}s</span>
-            <span> bis </span>
+            <span>{t('mobile.from', { time: mobileRecording.startTime.toFixed(1) })}</span>
+            <span> {t('mobile.to')} </span>
             <input
               type="number"
               className="recording-time-input"
@@ -127,10 +129,10 @@ export function MobileNav() {
           </div>
           <div className="selection-actions">
             <button className="selection-btn" onClick={handleCancelMovement}>
-              <span>✕</span><span>Abbrechen</span>
+              <span>✕</span><span>{t('mobile.cancel')}</span>
             </button>
             <button className="selection-btn confirm" onClick={handleFinishMovement}>
-              <span>✓</span><span>Fertig</span>
+              <span>✓</span><span>{t('mobile.done')}</span>
             </button>
           </div>
         </div>
@@ -140,20 +142,20 @@ export function MobileNav() {
       {selectedEl && !mobileRecording && (
         <div className="mobile-selection-bar">
           <div className="selection-info">
-            {ELEMENT_TYPE_NAMES[selectedEl.type] || selectedEl.type}
+            {getElementTypeName(selectedEl.type)}
           </div>
           <div className="selection-actions">
-            <button className="selection-btn" onClick={handleProperties} title="Eigenschaften">
-              <span>⚙️</span><span>Eigensch.</span>
+            <button className="selection-btn" onClick={handleProperties} title={t('mobile.propertiesTitle')}>
+              <span>⚙️</span><span>{t('mobile.props')}</span>
             </button>
-            <button className="selection-btn" onClick={handleStartMovement} title="Bewegung aufnehmen">
-              <span>🏃</span><span>Bewegung</span>
+            <button className="selection-btn" onClick={handleStartMovement} title={t('mobile.recordMovement')}>
+              <span>🏃</span><span>{t('mobile.movement')}</span>
             </button>
-            <button className="selection-btn" onClick={handleDuplicate} title="Duplizieren">
-              <span>📋</span><span>Kopieren</span>
+            <button className="selection-btn" onClick={handleDuplicate} title={t('mobile.duplicateTitle')}>
+              <span>📋</span><span>{t('mobile.copy')}</span>
             </button>
-            <button className="selection-btn danger" onClick={handleDelete} title="Löschen">
-              <span>🗑️</span><span>Löschen</span>
+            <button className="selection-btn danger" onClick={handleDelete} title={t('mobile.deleteTitle')}>
+              <span>🗑️</span><span>{t('mobile.delete')}</span>
             </button>
           </div>
         </div>
@@ -168,33 +170,33 @@ export function MobileNav() {
 
       {/* Bottom navigation */}
       <div className="bottom-nav">
-        {TOOLS.map(t => {
-          const isActive = t.mode === 'select'
+        {TOOLS.map(tool => {
+          const isActive = tool.mode === 'select'
             ? mode === 'select' && !placementType
-            : mode === t.mode;
+            : mode === tool.mode;
           return (
             <button
-              key={t.mode}
+              key={tool.mode}
               className={`bottom-nav-btn ${isActive ? 'active' : ''}`}
               onClick={() => {
-                setMode(t.mode);
-                if (t.mode !== 'select') setPlacementType(null);
+                setMode(tool.mode);
+                if (tool.mode !== 'select') setPlacementType(null);
                 if (mobileDrawer) setMobileDrawer(null);
               }}
-              title={t.label}
+              title={t(tool.labelKey)}
             >
-              <span className="bottom-nav-icon">{t.icon}</span>
-              <span className="bottom-nav-label">{t.label}</span>
+              <span className="bottom-nav-icon">{tool.icon}</span>
+              <span className="bottom-nav-label">{t(tool.labelKey)}</span>
             </button>
           );
         })}
         <button
           className={`bottom-nav-btn ${mobileDrawer === 'sidebar' ? 'active' : ''}`}
           onClick={() => setMobileDrawer(mobileDrawer === 'sidebar' ? null : 'sidebar')}
-          title="Elemente"
+          title={t('mobile.elements')}
         >
           <span className="bottom-nav-icon">📦</span>
-          <span className="bottom-nav-label">Elemente</span>
+          <span className="bottom-nav-label">{t('mobile.elements')}</span>
         </button>
       </div>
     </>

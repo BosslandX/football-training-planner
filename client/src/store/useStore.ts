@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { FieldElement, Drawing, ConceptData, ToolMode, FieldType, ElementType, Keyframe, ImportResult, Exercise } from '../types';
+import { normalizeCategoryKey } from '../types';
 
 interface HistoryEntry {
   elements: FieldElement[];
@@ -119,7 +120,7 @@ interface AppState {
 
 const defaultConcept: ConceptData = {
   name: '',
-  category: 'Aufwärmen',
+  category: 'categories.warmup',
   duration: 15,
   players: 16,
   fieldSize: '',
@@ -499,7 +500,7 @@ export const useStore = create<AppState>((set, get) => ({
         endTime: (el as any).endTime ?? -1,
       } as FieldElement));
       return {
-        concept: ex.concept,
+        concept: { ...ex.concept, category: normalizeCategoryKey(ex.concept.category) },
         elements,
         drawings: [],
         fieldType: (ex.fieldType as FieldType) || 'full-green',

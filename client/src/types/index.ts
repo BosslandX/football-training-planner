@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export type ElementType =
   | 'player-run' | 'player-stand' | 'player-pass'
   | 'goalkeeper' | 'trainer' | 'dummy'
@@ -68,33 +70,41 @@ export interface ConceptData {
   phases: Phase[];
 }
 
-export const ELEMENT_TYPE_NAMES: Record<ElementType, string> = {
-  'player-run': 'Spieler (Laufen)',
-  'player-stand': 'Spieler (Stehen)',
-  'player-pass': 'Spieler (Passen)',
-  'goalkeeper': 'Torwart',
-  'trainer': 'Trainer',
-  'dummy': 'Dummy',
-  'ball': 'Ball',
-  'cone': 'Hütchen',
-  'pole': 'Stange',
-  'ladder': 'Leiter',
-  'flag': 'Flagge',
-  'ring': 'Ring',
-  'goal-large': 'Großtor',
-  'goal-small': 'Minitor',
-  'goal-cone': 'Hütchentor',
+// ---- Element type names (i18n) ----
+
+const ELEMENT_TYPE_KEYS: Record<ElementType, string> = {
+  'player-run': 'elementTypes.playerRun',
+  'player-stand': 'elementTypes.playerStand',
+  'player-pass': 'elementTypes.playerPass',
+  'goalkeeper': 'elementTypes.goalkeeper',
+  'trainer': 'elementTypes.trainer',
+  'dummy': 'elementTypes.dummy',
+  'ball': 'elementTypes.ball',
+  'cone': 'elementTypes.cone',
+  'pole': 'elementTypes.pole',
+  'ladder': 'elementTypes.ladder',
+  'flag': 'elementTypes.flag',
+  'ring': 'elementTypes.ring',
+  'goal-large': 'elementTypes.goalLarge',
+  'goal-small': 'elementTypes.goalSmall',
+  'goal-cone': 'elementTypes.goalCone',
 };
 
-export const TEAM_COLORS = [
-  { name: 'Blau', value: '#3498db' },
-  { name: 'Rot', value: '#e74c3c' },
-  { name: 'Gelb', value: '#f1c40f' },
-  { name: 'Grün', value: '#2ecc71' },
-  { name: 'Orange', value: '#e67e22' },
-  { name: 'Lila', value: '#9b59b6' },
-  { name: 'Weiß', value: '#ecf0f1' },
-  { name: 'Schwarz', value: '#2c3e50' },
+export function getElementTypeName(type: ElementType): string {
+  return t(ELEMENT_TYPE_KEYS[type]);
+}
+
+// ---- Team colors (i18n) ----
+
+export const TEAM_COLORS: { nameKey: string; value: string }[] = [
+  { nameKey: 'colors.blue', value: '#3498db' },
+  { nameKey: 'colors.red', value: '#e74c3c' },
+  { nameKey: 'colors.yellow', value: '#f1c40f' },
+  { nameKey: 'colors.green', value: '#2ecc71' },
+  { nameKey: 'colors.orange', value: '#e67e22' },
+  { nameKey: 'colors.purple', value: '#9b59b6' },
+  { nameKey: 'colors.white', value: '#ecf0f1' },
+  { nameKey: 'colors.black', value: '#2c3e50' },
 ];
 
 export const DRAW_COLORS = [
@@ -118,7 +128,26 @@ export interface ImportResult {
   exercises: ExerciseImportData[];
 }
 
-export const CATEGORIES = [
-  'Aufwärmen', 'Technik', 'Taktik', 'Spielform',
-  'Torschuss', 'Kondition', 'Auslaufen',
+// ---- Categories (i18n) ----
+
+export const CATEGORY_KEYS = [
+  'categories.warmup', 'categories.technique', 'categories.tactics', 'categories.gameForm',
+  'categories.shooting', 'categories.fitness', 'categories.cooldown',
 ];
+
+/** Map legacy German category strings to i18n keys */
+const LEGACY_CATEGORY_MAP: Record<string, string> = {
+  'Aufwärmen': 'categories.warmup',
+  'Technik': 'categories.technique',
+  'Taktik': 'categories.tactics',
+  'Spielform': 'categories.gameForm',
+  'Torschuss': 'categories.shooting',
+  'Kondition': 'categories.fitness',
+  'Auslaufen': 'categories.cooldown',
+};
+
+/** Convert a possibly-legacy category string to an i18n key */
+export function normalizeCategoryKey(raw: string): string {
+  if (CATEGORY_KEYS.includes(raw)) return raw;
+  return LEGACY_CATEGORY_MAP[raw] ?? raw;
+}
